@@ -1,0 +1,10 @@
+{
+  "title": "task.update",
+  "description": "Desk -> mobile. The current task changed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task"],
+  "properties": {
+    "task": { "$ref": "task.json" }
+  }
+}

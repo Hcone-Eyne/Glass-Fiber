@@ -1,0 +1,11 @@
+{
+  "title": "state.event",
+  "description": "Either side. A state from schema/states.json happened. The receiver looks up level, title and action by state_id; detail is optional extra text and must already be scrubbed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["state_id"],
+  "properties": {
+    "state_id": { "type": "string", "pattern": "^[a-z0-9_]{2,32}$" },
+    "detail": { "type": ["string", "null"], "maxLength": 280 }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "task.list",
+  "description": "Desk -> mobile. Recent tasks, newest first. Sent after hello.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tasks"],
+  "properties": {
+    "tasks": { "type": "array", "maxItems": 20, "items": { "$ref": "task.json" } }
+  }
+}

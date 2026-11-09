@@ -1,0 +1,19 @@
+{
+  "v": 1,
+  "type": "task.update",
+  "id": "msg_01J9Z8K4M3",
+  "epoch": 1,
+  "seq": 2,
+  "ts": 1794204093000,
+  "payload": {
+    "task": {
+      "task_id": "tsk_glass_horizon",
+      "project": "glass_horizon",
+      "branch": "feat/menubar-view",
+      "active_file": "MenuBarView.swift",
+      "summary": "You were writing MenuBarView.swift on your Mac",
+      "updated_at": 1794204090000,
+      "uncommitted_count": 4
+    }
+  }
+}

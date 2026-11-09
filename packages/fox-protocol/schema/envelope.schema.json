@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fox-protocol/envelope.schema.json",
+  "title": "FoxLink v1 envelope",
+  "description": "Every message between Fox Desk and Fox Mobile. The payload is validated separately against schema/payloads/<type>.json. Only the JSON Schema subset listed in packages/fox-protocol/README.md may be used, so Python and Kotlin validators stay identical.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "type", "id", "epoch", "seq", "ts", "payload"],
+  "properties": {
+    "v": { "type": "integer", "const": 1 },
+    "type": { "type": "string", "enum": ["hello", "task.update", "task.list", "state.event"] },
+    "id": { "type": "string", "pattern": "^msg_[A-Za-z0-9]{6,32}$" },
+    "epoch": { "type": "integer", "minimum": 0 },
+    "seq": { "type": "integer", "minimum": 0 },
+    "ts": { "type": "integer", "minimum": 0 },
+    "payload": { "type": "object" }
+  }
+}

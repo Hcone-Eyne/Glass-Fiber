@@ -1,0 +1,30 @@
+{
+  "v": 1,
+  "type": "task.list",
+  "id": "msg_01J9Z8K4M4",
+  "epoch": 1,
+  "seq": 1,
+  "ts": 1794204091000,
+  "payload": {
+    "tasks": [
+      {
+        "task_id": "tsk_glass_horizon",
+        "project": "glass_horizon",
+        "branch": "feat/menubar-view",
+        "active_file": "MenuBarView.swift",
+        "summary": "You were writing MenuBarView.swift on your Mac",
+        "updated_at": 1794204090000,
+        "uncommitted_count": 4
+      },
+      {
+        "task_id": "tsk_notes",
+        "project": "notes",
+        "branch": null,
+        "active_file": null,
+        "summary": "You were in notes on your Mac",
+        "updated_at": 1794200000000,
+        "uncommitted_count": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,483 @@
+{
+  "source": "docs/prototypes/Fox_Line_v30.html",
+  "count": 53,
+  "states": [
+    {
+      "id": "mac_missing",
+      "group": "Connection",
+      "level": "warn",
+      "title": "Mac not nearby",
+      "detail": "Fox can’t find MacBook Air on this Wi-Fi.",
+      "action": "Retry",
+      "alt": "Enter IP"
+    },
+    {
+      "id": "net_block",
+      "group": "Connection",
+      "level": "warn",
+      "title": "Network blocks discovery",
+      "detail": "This Wi-Fi hides devices from each other.",
+      "action": "Use hotspot",
+      "alt": "Enter IP"
+    },
+    {
+      "id": "lost",
+      "group": "Connection",
+      "level": "warn",
+      "title": "Reconnecting…",
+      "detail": "The link to your Mac dropped. Trying again.",
+      "action": "Retry",
+      "alt": null
+    },
+    {
+      "id": "asleep",
+      "group": "Connection",
+      "level": "warn",
+      "title": "Mac is asleep",
+      "detail": "Wake your Mac, then try again.",
+      "action": "Retry",
+      "alt": null
+    },
+    {
+      "id": "desk_off",
+      "group": "Connection",
+      "level": "warn",
+      "title": "Fox Desk is off",
+      "detail": "The Fox Desk app isn’t running on your Mac.",
+      "action": "Open Fox Desk on Mac",
+      "alt": null
+    },
+    {
+      "id": "version",
+      "group": "Connection",
+      "level": "fail",
+      "title": "Update needed",
+      "detail": "This phone and Fox Desk are on different versions.",
+      "action": "Update app",
+      "alt": null
+    },
+    {
+      "id": "timeout",
+      "group": "Connection",
+      "level": "warn",
+      "title": "No reply from Mac",
+      "detail": "Your Mac didn’t answer within 8 seconds.",
+      "action": "Retry",
+      "alt": null
+    },
+    {
+      "id": "not_paired",
+      "group": "Pairing and security",
+      "level": "info",
+      "title": "Not paired yet",
+      "detail": "Pair once with the QR code shown in Fox Desk.",
+      "action": "Pair with QR",
+      "alt": null
+    },
+    {
+      "id": "code_mismatch",
+      "group": "Pairing and security",
+      "level": "fail",
+      "title": "Codes don’t match",
+      "detail": "The code on your Mac is different. Someone else may be trying to pair.",
+      "action": "Cancel",
+      "alt": null
+    },
+    {
+      "id": "qr_expired",
+      "group": "Pairing and security",
+      "level": "warn",
+      "title": "QR code expired",
+      "detail": "Pairing codes last 2 minutes.",
+      "action": "New QR",
+      "alt": null
+    },
+    {
+      "id": "revoked",
+      "group": "Pairing and security",
+      "level": "fail",
+      "title": "Pairing removed",
+      "detail": "This phone was removed in Fox Desk.",
+      "action": "Pair again",
+      "alt": null
+    },
+    {
+      "id": "unknown_dev",
+      "group": "Pairing and security",
+      "level": "silent",
+      "title": "Unknown device rejected",
+      "detail": null,
+      "action": null,
+      "alt": null
+    },
+    {
+      "id": "replay",
+      "group": "Pairing and security",
+      "level": "silent",
+      "title": "Stale message dropped (old epoch)",
+      "detail": null,
+      "action": null,
+      "alt": null
+    },
+    {
+      "id": "skew",
+      "group": "Pairing and security",
+      "level": "warn",
+      "title": "Clock mismatch",
+      "detail": "Your phone and Mac clocks are 6 minutes apart.",
+      "action": "Fix time",
+      "alt": null
+    },
+    {
+      "id": "no_task",
+      "group": "Task",
+      "level": "home",
+      "title": "Nothing to continue",
+      "detail": null,
+      "action": null,
+      "alt": null
+    },
+    {
+      "id": "stale",
+      "group": "Task",
+      "level": "home",
+      "title": "Stale task",
+      "detail": null,
+      "action": null,
+      "alt": null
+    },
+    {
+      "id": "allowlist",
+      "group": "Task",
+      "level": "silent",
+      "title": "Project not on allowlist · hidden, never sent",
+      "detail": null,
+      "action": null,
+      "alt": null
+    },
+    {
+      "id": "dup",
+      "group": "Task",
+      "level": "silent",
+      "title": "Duplicate after reconnect · merged",
+      "detail": null,
+      "action": null,
+      "alt": null
+    },
+    {
+      "id": "fork",
+      "group": "Task",
+      "level": "warn",
+      "title": "Which one to keep?",
+      "detail": "You changed this task on both devices while they were apart.",
+      "action": "Keep Mac version",
+      "alt": "Keep phone version"
+    },
+    {
+      "id": "folder_missing",
+      "group": "Task",
+      "level": "fail",
+      "title": "Folder not found",
+      "detail": "glass_horizon was moved or deleted on your Mac.",
+      "action": "Locate folder",
+      "alt": null
+    },
+    {
+      "id": "agent_crash",
+      "group": "Task",
+      "level": "warn",
+      "title": "Last known state, 6 min ago",
+      "detail": "Fox Desk stopped while working. This is what it saved.",
+      "action": "Restart Fox Desk",
+      "alt": null
+    },
+    {
+      "id": "done",
+      "group": "Resume",
+      "level": "ok",
+      "title": "Opened on Mac",
+      "detail": null,
+      "action": null,
+      "alt": null
+    },
+    {
+      "id": "partial",
+      "group": "Resume",
+      "level": "warn",
+      "title": "Opened 2 of 3",
+      "detail": "Safari tabs didn’t open: Automation isn’t allowed.",
+      "action": "Retry tabs",
+      "alt": null
+    },
+    {
+      "id": "unsupported",
+      "group": "Resume",
+      "level": "info",
+      "title": "Phone can’t do this",
+      "detail": "Opening Xcode needs your Mac.",
+      "action": "Send to Mac instead",
+      "alt": null
+    },
+    {
+      "id": "failed",
+      "group": "Resume",
+      "level": "fail",
+      "title": "Couldn’t open",
+      "detail": "Xcode quit while opening the project.",
+      "action": "Retry",
+      "alt": null
+    },
+    {
+      "id": "vscode",
+      "group": "Resume",
+      "level": "fail",
+      "title": "VS Code not found",
+      "detail": "Install VS Code or add it to PATH on your Mac.",
+      "action": "Show how",
+      "alt": null
+    },
+    {
+      "id": "file_missing",
+      "group": "Resume",
+      "level": "fail",
+      "title": "File not found",
+      "detail": "MenuBarView.swift is no longer in glass_horizon.",
+      "action": "Open folder",
+      "alt": null
+    },
+    {
+      "id": "branch",
+      "group": "Resume",
+      "level": "warn",
+      "title": "Branch changed since",
+      "detail": "Your Mac is on main now; this task was on feat/menubar-view.",
+      "action": "Continue anyway",
+      "alt": "Cancel"
+    },
+    {
+      "id": "locked",
+      "group": "Resume",
+      "level": "warn",
+      "title": "Mac is locked",
+      "detail": "Unlock your Mac, then try again.",
+      "action": "Retry",
+      "alt": null
+    },
+    {
+      "id": "twice",
+      "group": "Resume",
+      "level": "silent",
+      "title": "Second tap ignored · already opening",
+      "detail": null,
+      "action": null,
+      "alt": null
+    },
+    {
+      "id": "expired",
+      "group": "Resume",
+      "level": "warn",
+      "title": "Too old",
+      "detail": "That request is 10 minutes old.",
+      "action": "Resume again",
+      "alt": null
+    },
+    {
+      "id": "cancelled",
+      "group": "Resume",
+      "level": "info",
+      "title": "Cancelled",
+      "detail": "Stopped on both devices.",
+      "action": "Got it",
+      "alt": null
+    },
+    {
+      "id": "unknown",
+      "group": "Resume",
+      "level": "warn",
+      "title": "Unknown result",
+      "detail": "The link dropped midway. It may have opened.",
+      "action": "Check Mac",
+      "alt": null
+    },
+    {
+      "id": "ax",
+      "group": "Permissions",
+      "level": "fail",
+      "title": "Needs Accessibility",
+      "detail": "Fox Desk needs Accessibility to restore windows.",
+      "action": "Open Settings",
+      "alt": null
+    },
+    {
+      "id": "automation",
+      "group": "Permissions",
+      "level": "info",
+      "title": "Tabs skipped",
+      "detail": "Safari didn’t allow Fox. The project still opened.",
+      "action": "Allow in Settings",
+      "alt": null
+    },
+    {
+      "id": "screenrec",
+      "group": "Permissions",
+      "level": "info",
+      "title": "Window titles unavailable",
+      "detail": "Screen Recording is off. Everything else works.",
+      "action": "Open Settings",
+      "alt": null
+    },
+    {
+      "id": "notif",
+      "group": "Permissions",
+      "level": "info",
+      "title": "No status card",
+      "detail": "Notifications are off for Fox, so there’s no card in the shade.",
+      "action": "Allow notifications",
+      "alt": null
+    },
+    {
+      "id": "bt",
+      "group": "Permissions",
+      "level": "info",
+      "title": "Presence off",
+      "detail": "Bluetooth is off for Fox. Tasks still sync.",
+      "action": "Allow Bluetooth",
+      "alt": null
+    },
+    {
+      "id": "battery",
+      "group": "Permissions",
+      "level": "fail",
+      "title": "Fox was stopped",
+      "detail": "Battery saver closed Fox in the background.",
+      "action": "Open battery settings",
+      "alt": null
+    },
+    {
+      "id": "a11y_off",
+      "group": "Permissions",
+      "level": "info",
+      "title": "Phone signals off",
+      "detail": "Accessibility was turned off for Fox. Everything else works.",
+      "action": "Turn on",
+      "alt": null
+    },
+    {
+      "id": "lowdetail",
+      "group": "Caution",
+      "level": "info",
+      "title": "Low detail",
+      "detail": "Only tab titles were captured, not their pages.",
+      "action": "Got it",
+      "alt": null
+    },
+    {
+      "id": "uncommitted",
+      "group": "Caution",
+      "level": "info",
+      "title": "Uncommitted changes",
+      "detail": "4 files changed on your Mac since the last commit.",
+      "action": "Got it",
+      "alt": null
+    },
+    {
+      "id": "slow",
+      "group": "Caution",
+      "level": "info",
+      "title": "Slow link",
+      "detail": "Round trip is 820 ms. Things may lag.",
+      "action": "Got it",
+      "alt": null
+    },
+    {
+      "id": "lowbatt",
+      "group": "Caution",
+      "level": "info",
+      "title": "Syncing paused",
+      "detail": "Battery is at 12%.",
+      "action": "Sync anyway",
+      "alt": null
+    },
+    {
+      "id": "queue",
+      "group": "Caution",
+      "level": "warn",
+      "title": "4 waiting",
+      "detail": "These run when your Mac is back.",
+      "action": "View queue",
+      "alt": null
+    },
+    {
+      "id": "old",
+      "group": "Caution",
+      "level": "info",
+      "title": "From 18 min ago",
+      "detail": "No update from your Mac since then.",
+      "action": "Refresh",
+      "alt": null
+    },
+    {
+      "id": "corrupt",
+      "group": "Data and system",
+      "level": "warn",
+      "title": "Restored from backup",
+      "detail": "Fox’s data was damaged, so it went back to 2 hours ago.",
+      "action": "Got it",
+      "alt": null
+    },
+    {
+      "id": "migration",
+      "group": "Data and system",
+      "level": "fail",
+      "title": "Update blocked",
+      "detail": "Your data couldn’t move to the new version. The old data is safe.",
+      "action": "Report",
+      "alt": null
+    },
+    {
+      "id": "disk",
+      "group": "Data and system",
+      "level": "warn",
+      "title": "Storage full",
+      "detail": "Logging stopped. Your tasks are kept.",
+      "action": "Free up space",
+      "alt": null
+    },
+    {
+      "id": "redaction",
+      "group": "Data and system",
+      "level": "fail",
+      "title": "Send blocked",
+      "detail": "Fox couldn’t hide a secret in this text, so nothing was sent.",
+      "action": "Edit and resend",
+      "alt": null
+    },
+    {
+      "id": "killed",
+      "group": "Phone-side",
+      "level": "info",
+      "title": "Restored",
+      "detail": "Fox restarted and rebuilt its state from your Mac.",
+      "action": "Got it",
+      "alt": null
+    },
+    {
+      "id": "fgs",
+      "group": "Phone-side",
+      "level": "fail",
+      "title": "Fox was stopped",
+      "detail": "The background service stopped.",
+      "action": "Restart Fox",
+      "alt": null
+    },
+    {
+      "id": "updated",
+      "group": "Phone-side",
+      "level": "info",
+      "title": "Reconnected",
+      "detail": "Fox updated and paired again with your Mac.",
+      "action": "Got it",
+      "alt": null
+    }
+  ]
+}

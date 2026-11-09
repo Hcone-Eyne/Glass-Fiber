@@ -1,0 +1,258 @@
+[
+  {
+    "name": "wrong_version",
+    "expect_error": "v",
+    "message": {
+      "v": 2,
+      "type": "hello",
+      "id": "msg_0000001",
+      "epoch": 1,
+      "seq": 0,
+      "ts": 1,
+      "payload": {
+        "role": "desk",
+        "device_name": "Mac",
+        "app_version": "0.1.0",
+        "protocol": 1
+      }
+    }
+  },
+  {
+    "name": "unknown_type_is_rejected_not_ignored",
+    "expect_error": "type",
+    "message": {
+      "v": 1,
+      "type": "resume.request",
+      "id": "msg_0000002",
+      "epoch": 1,
+      "seq": 0,
+      "ts": 1,
+      "payload": {}
+    }
+  },
+  {
+    "name": "missing_seq",
+    "expect_error": "seq",
+    "message": {
+      "v": 1,
+      "type": "hello",
+      "id": "msg_0000003",
+      "epoch": 1,
+      "ts": 1,
+      "payload": {
+        "role": "desk",
+        "device_name": "Mac",
+        "app_version": "0.1.0",
+        "protocol": 1
+      }
+    }
+  },
+  {
+    "name": "extra_envelope_field",
+    "expect_error": "cmd",
+    "message": {
+      "v": 1,
+      "type": "hello",
+      "id": "msg_0000004",
+      "epoch": 1,
+      "seq": 0,
+      "ts": 1,
+      "cmd": "rm -rf ~",
+      "payload": {
+        "role": "desk",
+        "device_name": "Mac",
+        "app_version": "0.1.0",
+        "protocol": 1
+      }
+    }
+  },
+  {
+    "name": "bad_id_pattern",
+    "expect_error": "id",
+    "message": {
+      "v": 1,
+      "type": "hello",
+      "id": "x",
+      "epoch": 1,
+      "seq": 0,
+      "ts": 1,
+      "payload": {
+        "role": "desk",
+        "device_name": "Mac",
+        "app_version": "0.1.0",
+        "protocol": 1
+      }
+    }
+  },
+  {
+    "name": "negative_epoch",
+    "expect_error": "epoch",
+    "message": {
+      "v": 1,
+      "type": "hello",
+      "id": "msg_0000005",
+      "epoch": -1,
+      "seq": 0,
+      "ts": 1,
+      "payload": {
+        "role": "desk",
+        "device_name": "Mac",
+        "app_version": "0.1.0",
+        "protocol": 1
+      }
+    }
+  },
+  {
+    "name": "task_with_extra_field_command_text",
+    "expect_error": "payload.task.command",
+    "message": {
+      "v": 1,
+      "type": "task.update",
+      "id": "msg_0000006",
+      "epoch": 1,
+      "seq": 1,
+      "ts": 1,
+      "payload": {
+        "task": {
+          "task_id": "tsk_a",
+          "project": "a",
+          "branch": null,
+          "active_file": null,
+          "summary": "s",
+          "updated_at": 1,
+          "uncommitted_count": null,
+          "command": "export TOKEN=abc"
+        }
+      }
+    }
+  },
+  {
+    "name": "task_missing_summary",
+    "expect_error": "payload.task.summary",
+    "message": {
+      "v": 1,
+      "type": "task.update",
+      "id": "msg_0000007",
+      "epoch": 1,
+      "seq": 1,
+      "ts": 1,
+      "payload": {
+        "task": {
+          "task_id": "tsk_a",
+          "project": "a",
+          "branch": null,
+          "active_file": null,
+          "updated_at": 1,
+          "uncommitted_count": null
+        }
+      }
+    }
+  },
+  {
+    "name": "task_list_item_wrong_type",
+    "expect_error": "payload.tasks[0].uncommitted_count",
+    "message": {
+      "v": 1,
+      "type": "task.list",
+      "id": "msg_0000008",
+      "epoch": 1,
+      "seq": 1,
+      "ts": 1,
+      "payload": {
+        "tasks": [
+          {
+            "task_id": "tsk_a",
+            "project": "a",
+            "branch": null,
+            "active_file": null,
+            "summary": "s",
+            "updated_at": 1,
+            "uncommitted_count": "4"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "state_event_bad_id",
+    "expect_error": "payload.state_id",
+    "message": {
+      "v": 1,
+      "type": "state.event",
+      "id": "msg_0000009",
+      "epoch": 1,
+      "seq": 1,
+      "ts": 1,
+      "payload": {
+        "state_id": "Mac Missing!"
+      }
+    }
+  },
+  {
+    "name": "hello_wrong_role",
+    "expect_error": "payload.role",
+    "message": {
+      "v": 1,
+      "type": "hello",
+      "id": "msg_0000010",
+      "epoch": 1,
+      "seq": 0,
+      "ts": 1,
+      "payload": {
+        "role": "admin",
+        "device_name": "Mac",
+        "app_version": "0.1.0",
+        "protocol": 1
+      }
+    }
+  },
+  {
+    "name": "boolean_is_not_integer",
+    "expect_error": "seq",
+    "message": {
+      "v": 1,
+      "type": "hello",
+      "id": "msg_0000011",
+      "epoch": 1,
+      "seq": true,
+      "ts": 1,
+      "payload": {
+        "role": "desk",
+        "device_name": "Mac",
+        "app_version": "0.1.0",
+        "protocol": 1
+      }
+    }
+  },
+  {
+    "name": "state_event_unknown_state",
+    "expect_error": "payload.state_id",
+    "message": {
+      "v": 1,
+      "type": "state.event",
+      "id": "msg_0000012",
+      "epoch": 1,
+      "seq": 1,
+      "ts": 1,
+      "payload": {
+        "state_id": "not_a_state"
+      }
+    }
+  },
+  {
+    "name": "state_event_extra_field",
+    "expect_error": "payload.run",
+    "message": {
+      "v": 1,
+      "type": "state.event",
+      "id": "msg_0000013",
+      "epoch": 1,
+      "seq": 1,
+      "ts": 1,
+      "payload": {
+        "state_id": "asleep",
+        "run": "open -a Terminal"
+      }
+    }
+  }
+]

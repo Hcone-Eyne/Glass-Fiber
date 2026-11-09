@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "state.event",
+  "id": "msg_01J9Z8K4M5",
+  "epoch": 1,
+  "seq": 3,
+  "ts": 1794204094000,
+  "payload": {
+    "state_id": "uncommitted",
+    "detail": null
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "title": "task",
+  "description": "One unit of work on the Mac. Shared by task.update and task.list. Never contains shell command text, file contents or environment values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "project", "branch", "active_file", "summary", "updated_at", "uncommitted_count"],
+  "properties": {
+    "task_id": { "type": "string", "pattern": "^tsk_[A-Za-z0-9_-]{1,64}$" },
+    "project": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "branch": { "type": ["string", "null"], "maxLength": 128 },
+    "active_file": { "type": ["string", "null"], "maxLength": 256 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 280 },
+    "updated_at": { "type": "integer", "minimum": 0 },
+    "uncommitted_count": { "type": ["integer", "null"], "minimum": 0 }
+  }
+}

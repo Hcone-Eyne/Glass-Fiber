@@ -1,0 +1,1142 @@
+<meta charset="utf-8">
+<title>Fox Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one phone-sized launcher on a quiet stage (guide on the left on wide screens).
+   On a real phone the launcher becomes the whole page. Frosted panes float over a light-field wallpaper;
+   the Continue card is the one loud element, edged with a slowly turning prism light. */
+:root{
+  --stage:#E3E7EE; --stage-fg:#171C28; --stage-mute:#596277;
+  --wbase:#E6ECF4; --w1:#BFD2F2; --w2:#F7C6A2; --w3:#B4E2E4;
+  --glass:rgba(255,255,255,.55); --glass-hi:rgba(255,255,255,.80); --glass-lo:rgba(255,255,255,.32);
+  --sheet:#F3F5F9; --sheet-2:#E8ECF2;
+  --line:rgba(20,30,50,.09); --edge:rgba(255,255,255,.75);
+  --fg:#101622; --fg2:#4F596C; --fg3:#7A8396;
+  --fox:#EC6A1E; --fox-ink:#1C0E05; --fox-soft:rgba(236,106,30,.14);
+  --ok:#17905A; --ok-soft:rgba(23,144,90,.13);
+  --warn:#A86A10; --warn-soft:rgba(214,150,40,.17);
+  --bad:#CC3B31; --bad-soft:rgba(204,59,49,.11);
+  --prism:#2470C2; --prism-soft:rgba(36,112,194,.12);
+  --scrim:rgba(8,12,20,.34);
+  --shadow:0 1px 0 var(--edge) inset, 0 12px 32px rgba(22,32,60,.12);
+  --phone-edge:#191C23;
+  --a-blue:#3B7EF0; --a-green:#1F9E68; --a-orange:#EE8424; --a-pink:#DD4579; --a-violet:#7B5BDF;
+  --a-teal:#129C9F; --a-slate:#5E6D84; --a-red:#E04A4F; --a-yellow:#D9A520;
+
+  --f-display:"Bricolage Grotesque", ui-rounded, system-ui, sans-serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Material 3 easing; springs are computed in script and replace --spring / --snap when linear() is supported */
+  --e-emph:cubic-bezier(.2,0,0,1); --e-decel:cubic-bezier(.05,.7,.1,1); --e-accel:cubic-bezier(.3,0,.8,.15);
+  --spring:var(--e-emph); --spring-d:480ms; --snap:var(--e-emph); --snap-d:340ms;
+  --sb:34px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --stage:#06080C; --stage-fg:#E6E9EF; --stage-mute:#8B93A4;
+    --wbase:#090D15; --w1:#17305E; --w2:#5C2A10; --w3:#0D4850;
+    --glass:rgba(26,32,45,.52); --glass-hi:rgba(38,46,62,.74); --glass-lo:rgba(20,26,36,.34);
+    --sheet:#121722; --sheet-2:#1A2130;
+    --line:rgba(255,255,255,.08); --edge:rgba(255,255,255,.07);
+    --fg:#EEF1F6; --fg2:#A4ADBD; --fg3:#7D8698;
+    --fox:#FF8A3D; --fox-ink:#1C0E05; --fox-soft:rgba(255,138,61,.16);
+    --ok:#3DD68C; --ok-soft:rgba(61,214,140,.14);
+    --warn:#F2B84B; --warn-soft:rgba(242,184,75,.15);
+    --bad:#FF6F62; --bad-soft:rgba(255,111,98,.13);
+    --prism:#72B6FF; --prism-soft:rgba(114,182,255,.13);
+    --scrim:rgba(0,0,0,.5);
+    --shadow:0 1px 0 var(--edge) inset, 0 14px 36px rgba(0,0,0,.42);
+    --phone-edge:#2A2E37;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --stage:#06080C; --stage-fg:#E6E9EF; --stage-mute:#8B93A4;
+  --wbase:#090D15; --w1:#17305E; --w2:#5C2A10; --w3:#0D4850;
+  --glass:rgba(26,32,45,.52); --glass-hi:rgba(38,46,62,.74); --glass-lo:rgba(20,26,36,.34);
+  --sheet:#121722; --sheet-2:#1A2130;
+  --line:rgba(255,255,255,.08); --edge:rgba(255,255,255,.07);
+  --fg:#EEF1F6; --fg2:#A4ADBD; --fg3:#7D8698;
+  --fox:#FF8A3D; --fox-ink:#1C0E05; --fox-soft:rgba(255,138,61,.16);
+  --ok:#3DD68C; --ok-soft:rgba(61,214,140,.14);
+  --warn:#F2B84B; --warn-soft:rgba(242,184,75,.15);
+  --bad:#FF6F62; --bad-soft:rgba(255,111,98,.13);
+  --prism:#72B6FF; --prism-soft:rgba(114,182,255,.13);
+  --scrim:rgba(0,0,0,.5);
+  --shadow:0 1px 0 var(--edge) inset, 0 14px 36px rgba(0,0,0,.42);
+  --phone-edge:#2A2E37;
+  color-scheme:dark;
+}
+
+@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--stage);color:var(--fg);font-family:var(--f-body);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--fox);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.78em;letter-spacing:-.01em}
+.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.i.fill{fill:currentColor;stroke:none}
+
+/* ---------- stage ---------- */
+.stage{height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:56px;
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.guide{width:280px;color:var(--stage-fg);display:flex;flex-direction:column;gap:22px}
+.guide h1{font-family:var(--f-display);font-weight:650;font-size:44px;line-height:1;letter-spacing:-.03em;margin:0}
+.guide h1 span{color:var(--fox)}
+.guide p{margin:0;color:var(--stage-mute);line-height:1.5;font-size:14px}
+.guide ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:t}
+.guide li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:13.5px;line-height:1.4;color:var(--stage-fg)}
+.guide li::before{counter-increment:t;content:counter(t);font:600 11px/22px var(--f-mono);text-align:center;width:22px;height:22px;border-radius:50%;background:var(--fox-soft);color:var(--fox)}
+.guide li small{display:block;color:var(--stage-mute);font-size:12.5px}
+.guide .lab{font:600 11px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--stage-mute)}
+.seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--glass-lo);border:1px solid var(--line);gap:2px}
+.seg button{padding:7px 12px;border-radius:9px;font-size:13px;font-weight:600;color:var(--stage-mute)}
+.seg button[aria-pressed="true"]{background:var(--glass-hi);color:var(--stage-fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.guide .reset{align-self:flex-start;font-size:13px;font-weight:600;color:var(--fox);padding:6px 0}
+
+.phone{position:relative;height:min(860px,100%);aspect-ratio:9/19.6;max-width:100%;flex:none;box-sizing:border-box;
+  border-radius:52px;padding:10px;background:var(--phone-edge);
+  box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 40px 80px -20px rgba(10,15,30,.45),0 18px 30px -18px rgba(10,15,30,.4)}
+.screen{position:relative;height:100%;width:100%;border-radius:42px;overflow:hidden;isolation:isolate;background:var(--wbase);container-type:inline-size;user-select:none;-webkit-user-select:none}
+
+/* ---------- wallpaper ---------- */
+.wall{position:absolute;inset:-20%;z-index:0;
+  background:
+    radial-gradient(42% 30% at 78% 18%, var(--w2) 0%, transparent 70%),
+    radial-gradient(55% 38% at 12% 46%, var(--w1) 0%, transparent 72%),
+    radial-gradient(48% 34% at 70% 82%, var(--w3) 0%, transparent 70%),
+    var(--wbase);
+  animation:drift 38s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(-4%,3%,0) rotate(4deg) scale(1.04)}}
+
+/* ---------- status bar ---------- */
+.statusbar{position:absolute;inset:0 0 auto;height:var(--sb);z-index:20;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 30px;font:600 13px var(--f-body);font-variant-numeric:tabular-nums;color:var(--fg);pointer-events:none}
+.statusbar .r{display:flex;align-items:center;gap:6px}
+.statusbar .i{width:15px;height:15px;stroke-width:2}
+.batt{display:inline-flex;align-items:center;gap:4px}
+.batt i{display:inline-block;width:22px;height:11px;border:1.5px solid currentColor;border-radius:3.5px;position:relative;opacity:.9}
+.batt i::after{content:"";position:absolute;inset:1.5px;right:30%;background:currentColor;border-radius:1.5px}
+
+/* ---------- glass + press ---------- */
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);border:1px solid var(--line);box-shadow:var(--shadow)}
+.press{transition:transform var(--snap-d) var(--snap)}
+.press:active{transform:scale(.965);transition-duration:120ms;transition-timing-function:var(--e-emph)}
+.rp{position:relative;overflow:hidden}
+.ripple{position:absolute;border-radius:50%;background:currentColor;pointer-events:none;transform:scale(0)}
+
+/* ---------- home ---------- */
+.home{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;padding-top:var(--sb);transform-origin:50% 40%}
+.home-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:6px 18px 18px;display:flex;flex-direction:column;gap:18px}
+.home-scroll::-webkit-scrollbar{display:none}
+
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:10px 4px 0}
+.date{font-size:13.5px;font-weight:600;color:var(--fg2)}
+.clock{font:600 64px/0.95 var(--f-display);letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-variation-settings:"opsz" 96;margin-top:2px}
+.link-chip{display:flex;align-items:center;gap:8px;padding:7px 12px 7px 9px;border-radius:999px;text-align:left;margin-bottom:6px}
+.link-chip b{display:block;font-size:12.5px;font-weight:650;line-height:1.2}
+.link-chip small{display:block;font-size:11.5px;color:var(--fg2);line-height:1.2;font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 0 3px var(--ok-soft);transition:background .3s,box-shadow .3s}
+.link-chip[data-s="off"] .dot{background:var(--fg3);box-shadow:0 0 0 3px var(--line)}
+.link-chip[data-s="queued"] .dot{background:var(--warn);box-shadow:0 0 0 3px var(--warn-soft)}
+.dot.blip{animation:blip .9s var(--e-decel)}
+@keyframes blip{0%{box-shadow:0 0 0 0 var(--ok)}100%{box-shadow:0 0 0 12px transparent}}
+
+.sec{font:650 11px var(--f-body);letter-spacing:.13em;text-transform:uppercase;color:var(--fg2);margin:0 0 9px 4px;display:flex;justify-content:space-between;align-items:baseline}
+.sec span{letter-spacing:0;text-transform:none;font-weight:500;font-size:12px;color:var(--fg3)}
+
+/* Continue — the signature card */
+.continue{position:relative;border-radius:28px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px}
+.continue::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;
+  background:conic-gradient(from var(--ang), transparent 0deg, var(--fox) 50deg, var(--w3) 95deg, transparent 150deg, transparent 230deg, var(--prism) 280deg, transparent 330deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:.85;animation:turn 9s linear infinite}
+@keyframes turn{to{--ang:360deg}}
+.c-eyebrow{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--fg2)}
+.c-eyebrow .i{width:16px;height:16px}
+.c-title{font:620 26px/1.08 var(--f-display);letter-spacing:-.025em;font-variation-settings:"opsz" 40;text-wrap:balance}
+.c-meta{display:flex;align-items:center;gap:6px;color:var(--fg2);font-size:12.5px}
+.c-meta .i{width:15px;height:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--glass-hi);border:1px solid var(--line);color:var(--fg2);display:inline-flex;align-items:center;gap:5px}
+.c-actions{display:flex;gap:8px;margin-top:4px}
+
+.cta{flex:1;min-height:50px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:700;font-size:15.5px;
+  background:var(--fox);color:var(--fox-ink);box-shadow:0 8px 20px -8px var(--fox);
+  transition:background-color .35s var(--e-emph),color .35s var(--e-emph),box-shadow .35s var(--e-emph),transform var(--snap-d) var(--snap)}
+.cta:active{transform:scale(.97);transition-duration:120ms}
+.cta .cta-ic{display:grid;place-items:center;width:22px;height:22px}
+.cta .cta-ic > *{grid-area:1/1}
+.cta .spin,.cta .ok{display:none}
+.cta[data-state="busy"] .go,.cta[data-state="done"] .go,.cta[data-state="queued"] .go{display:none}
+.cta[data-state="busy"] .spin{display:block}
+.cta[data-state="done"] .ok{display:block}
+.cta[data-state="done"]{background:var(--ok);color:var(--fox-ink);box-shadow:0 8px 20px -10px var(--ok)}
+.cta[data-state="queued"]{background:var(--warn-soft);color:var(--warn);box-shadow:inset 0 0 0 1.5px var(--warn)}
+.cta[data-state="queued"] .go{display:block}
+.cta.wide{width:100%;flex:none}
+.spin{width:20px;height:20px;animation:rot 1.1s linear infinite}
+.spin circle{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:44 100;animation:dash 1.4s var(--e-emph) infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+@keyframes dash{0%{stroke-dasharray:4 100;stroke-dashoffset:0}50%{stroke-dasharray:36 100;stroke-dashoffset:-8}100%{stroke-dasharray:4 100;stroke-dashoffset:-50}}
+.ok path{stroke-dasharray:24;stroke-dashoffset:24}
+.cta[data-state="done"] .ok path{animation:draw .45s .05s var(--e-decel) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.ghost{min-height:50px;padding:0 18px;border-radius:999px;font-weight:650;font-size:14.5px;background:var(--glass-hi);border:1px solid var(--line)}
+.c-result{min-height:0;color:var(--ok);display:flex;align-items:center;gap:6px;font-size:12px}
+.c-result:empty{display:none}
+.c-result.q{color:var(--warn)}
+
+/* Pulse carousel */
+.pulse{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:18px;margin-inline:-18px;padding:2px 18px 6px;scrollbar-width:none;overscroll-behavior-x:contain}
+.pulse::-webkit-scrollbar{display:none}
+.pcard{flex:0 0 84%;scroll-snap-align:start;border-radius:24px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.p-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:7px;letter-spacing:.02em}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.prism{background:var(--prism-soft);color:var(--prism)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.p-src{font-size:11.5px;color:var(--fg3);font-variant-numeric:tabular-nums}
+.p-title{margin:2px 0 0;font:600 16.5px/1.25 var(--f-display);letter-spacing:-.015em;text-wrap:balance}
+.p-sub{margin:0;color:var(--fg2);font-size:12.5px;line-height:1.35;overflow-wrap:anywhere}
+.p-act{margin-top:6px;min-height:42px;border-radius:14px;font-weight:650;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--glass-hi);border:1px solid var(--line)}
+.p-act.tonal{background:var(--fox-soft);color:var(--fox);border-color:transparent}
+.p-act[disabled]{cursor:default;opacity:1;color:var(--ok);background:var(--ok-soft);border-color:transparent}
+.hold{position:relative;overflow:hidden;isolation:isolate}
+.hold-fill{position:absolute;inset:0;background:var(--fox-soft);transform:scaleX(0);transform-origin:left;z-index:-1}
+.hold .i{width:17px;height:17px}
+.lin{height:4px;border-radius:4px;background:var(--fox-soft);overflow:hidden;position:relative;margin:4px 0 2px}
+.lin::before,.lin::after{content:"";position:absolute;top:0;bottom:0;background:var(--fox);border-radius:4px}
+.lin::before{animation:lin1 1.6s var(--e-emph) infinite}
+.lin::after{animation:lin2 1.6s .55s var(--e-emph) infinite}
+@keyframes lin1{0%{left:-35%;right:100%}60%,100%{left:100%;right:-90%}}
+@keyframes lin2{0%{left:-200%;right:100%}60%,100%{left:107%;right:-8%}}
+
+/* Spaces */
+.spaces{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.space{border-radius:22px;padding:13px 13px 12px;text-align:left;display:flex;flex-direction:column;gap:3px;min-width:0;color:var(--fg)}
+.sp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sp-dot{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--sc) 18%,transparent);color:var(--sc)}
+.sp-dot .i{width:17px;height:17px}
+.sp-count{font-size:11px;font-weight:650;color:var(--fg3);font-variant-numeric:tabular-nums}
+.sp-name{font:620 15.5px/1.2 var(--f-display);letter-spacing:-.01em}
+.sp-line{font-size:12px;color:var(--fg2);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* bottom shelf */
+.bottom{flex:none;padding:8px 14px 30px;display:flex;flex-direction:column;gap:12px}
+.search-pill{display:flex;align-items:center;gap:10px;height:48px;border-radius:999px;padding:0 8px 0 16px;color:var(--fg2);font-size:14.5px;font-weight:500;text-align:left}
+.search-pill span{flex:1}
+.search-pill .mic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--fox-soft);color:var(--fox)}
+.dock{display:flex;justify-content:space-around;padding:0 6px}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;font-weight:550;color:var(--fg);min-width:0}
+.app-ic{width:56px;height:56px;border-radius:19px;display:grid;place-items:center;color:var(--ac);
+  background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 22%,var(--glass-hi)),color-mix(in srgb,var(--ac) 8%,var(--glass)));
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--line);box-shadow:var(--shadow)}
+.app-ic .i{width:25px;height:25px}
+.dock .app span:last-child{display:none}
+
+/* ---------- space view ---------- */
+.space-view{position:absolute;inset:0;z-index:5;background:var(--sheet);overflow:hidden;display:flex;flex-direction:column;padding-top:var(--sb);transform-origin:100% 50%}
+.space-view::before{content:"";position:absolute;inset:0 0 auto;height:260px;background:radial-gradient(90% 100% at 20% 0%,color-mix(in srgb,var(--sc) 26%,transparent),transparent 72%);pointer-events:none}
+.sv-inner{position:relative;flex:1;min-height:0;overflow-y:auto;padding:4px 18px 18px;scrollbar-width:none}
+.sv-inner::-webkit-scrollbar{display:none}
+.icon-btn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center}
+.sv-head{display:flex;align-items:center;gap:6px;margin:4px 0 6px -8px}
+.sv-kicker{font-size:12px;font-weight:650;color:var(--sc);letter-spacing:.02em}
+.sv-title{font:640 34px/1.02 var(--f-display);letter-spacing:-.035em;margin:10px 0 6px;font-variation-settings:"opsz" 72;text-wrap:balance}
+.sv-line{margin:0 0 20px;color:var(--fg2);font-size:14px}
+.group{background:var(--sheet-2);border-radius:20px;padding:4px 0;margin-bottom:18px}
+.trow{display:flex;align-items:center;gap:12px;padding:11px 14px;width:100%;text-align:left;min-width:0}
+.trow + .trow{border-top:1px solid var(--line)}
+.trow > div{min-width:0;flex:1}
+.trow b{display:block;font-size:14.5px;font-weight:600;line-height:1.3;transition:color .3s}
+.trow small{display:block;font-size:12.5px;color:var(--fg2);margin-top:2px}
+.box{width:22px;height:22px;border-radius:7px;border:2px solid var(--fg3);display:grid;place-items:center;flex:none;transition:background-color .25s var(--e-emph),border-color .25s}
+.box .i{width:15px;height:15px;stroke-width:2.6;color:var(--fox-ink);opacity:0;transform:scale(.4);transition:opacity .2s,transform var(--snap-d) var(--snap)}
+.trow[aria-checked="true"] .box{background:var(--sc);border-color:var(--sc)}
+.trow[aria-checked="true"] .box .i{opacity:1;transform:none}
+.trow[aria-checked="true"] b{color:var(--fg3);text-decoration:line-through;text-decoration-thickness:1.5px}
+.mrow .app-ic{width:36px;height:36px;border-radius:11px;box-shadow:none}
+.mrow .app-ic .i{width:18px;height:18px}
+.files{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.sv-foot{position:relative;padding:10px 18px 32px;background:linear-gradient(transparent,var(--sheet) 30%)}
+.pb-arrow{position:absolute;left:8px;top:50%;width:34px;height:34px;margin-top:-17px;border-radius:50%;background:var(--glass-hi);display:grid;place-items:center;opacity:0;z-index:7;pointer-events:none;box-shadow:var(--shadow)}
+
+/* ---------- app view ---------- */
+.app-view{position:absolute;inset:0;z-index:6;background:color-mix(in srgb,var(--ac) 30%,var(--sheet));display:grid;place-items:center;cursor:pointer}
+.app-inner{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:0 40px}
+.app-inner .app-ic{width:96px;height:96px;border-radius:30px}
+.app-inner .app-ic .i{width:42px;height:42px}
+.app-inner h2{margin:0;font:640 28px var(--f-display);letter-spacing:-.02em}
+.app-inner p{margin:0;color:var(--fg2);font-size:13.5px;line-height:1.45}
+
+/* ---------- sheets ---------- */
+.scrim{position:absolute;inset:0;z-index:8;background:var(--scrim)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:9;background:var(--sheet);border-radius:30px 30px 0 0;display:flex;flex-direction:column;max-height:90%;box-shadow:0 -10px 40px rgba(0,0,0,.18)}
+.sheet.tall{height:90%}
+.grab-zone{flex:none;padding:8px 20px 6px;touch-action:none;cursor:grab}
+.grabber{display:block;width:38px;height:5px;border-radius:5px;background:var(--fg3);opacity:.5;margin:0 auto 12px}
+.sh-title h2{margin:0;font:640 24px/1.1 var(--f-display);letter-spacing:-.025em}
+.sh-title p{margin:3px 0 0;color:var(--fg2);font-size:13px}
+.sheet-body{flex:1;min-height:0;overflow-y:auto;padding:12px 20px 34px;scrollbar-width:none;overscroll-behavior:contain}
+.sheet-body::-webkit-scrollbar{display:none}
+
+.field{display:flex;align-items:center;gap:10px;height:50px;padding:0 14px;border-radius:16px;background:var(--sheet-2);color:var(--fg2);margin-bottom:16px}
+.field input{flex:1;min-width:0;border:0;background:none;font:500 16px var(--f-body);color:var(--fg);outline:none}
+.field input::placeholder{color:var(--fg3)}
+.qa{display:flex;gap:8px;overflow-x:auto;margin:0 -20px 18px;padding:0 20px;scrollbar-width:none}
+.qa::-webkit-scrollbar{display:none}
+.qa button{flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:12px;background:var(--sheet-2);font-size:13.5px;font-weight:600}
+.qa .i{width:17px;height:17px;color:var(--fox)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 6px}
+.grid .app-ic{width:54px;height:54px;border-radius:18px}
+.res{display:flex;flex-direction:column}
+.res-sec{font:650 11px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--fg3);margin:10px 0 4px}
+.res button{display:flex;align-items:center;gap:12px;padding:9px 6px;border-radius:14px;text-align:left;width:100%}
+.res button > div{min-width:0;flex:1}
+.res b{display:block;font-weight:600;font-size:14.5px}
+.res small{display:block;color:var(--fg2);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.res .app-ic{width:38px;height:38px;border-radius:12px;box-shadow:none}
+.res .app-ic .i{width:19px;height:19px}
+.res mark{background:var(--fox-soft);color:inherit;border-radius:3px;padding:0 1px}
+.res button.first{background:var(--sheet-2)}
+.empty{color:var(--fg2);font-size:14px;padding:20px 4px}
+
+/* link sheet */
+.radar{position:relative;height:170px;display:grid;place-items:center;margin:2px 0 6px}
+.ring{position:absolute;width:150px;height:150px;border-radius:50%;border:1.5px solid var(--fox);opacity:0;animation:ring 3s var(--e-decel) infinite}
+.ring:nth-child(2){animation-delay:1s}.ring:nth-child(3){animation-delay:2s}
+@keyframes ring{0%{transform:scale(.2);opacity:.7}100%{transform:scale(1.15);opacity:0}}
+.radar .me,.radar .mac{position:absolute;width:44px;height:44px;border-radius:15px;display:grid;place-items:center;background:var(--sheet-2);box-shadow:var(--shadow)}
+.radar .me{color:var(--fox)}
+.radar .mac{transform:translate(78px,-42px);color:var(--prism);transition:opacity .4s,transform .6s var(--e-emph)}
+.radar[data-off] .ring{border-color:var(--fg3);animation-duration:4.5s}
+.radar[data-off] .mac{opacity:.25;transform:translate(96px,-50px) scale(.85)}
+.radar-cap{text-align:center;margin:0 0 16px;font-size:12.5px;color:var(--fg2)}
+.rows{background:var(--sheet-2);border-radius:18px;padding:2px 0;margin-bottom:12px}
+.rows .row{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;font-size:14px}
+.rows .row + .row{border-top:1px solid var(--line)}
+.rows .row span{color:var(--fg2)}
+.rows .row b{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.switch-row{display:flex;align-items:center;gap:12px;background:var(--sheet-2);border-radius:18px;padding:12px 14px;margin-bottom:22px}
+.switch-row > div{flex:1;min-width:0}
+.switch-row b{display:block;font-size:14.5px;font-weight:600}
+.switch-row small{display:block;font-size:12.5px;color:var(--fg2);margin-top:2px;line-height:1.35}
+/* Material 3 switch */
+.m3{width:52px;height:32px;border-radius:16px;flex:none;position:relative;background:var(--sheet);box-shadow:inset 0 0 0 2px var(--fg3);transition:background-color .25s var(--e-emph),box-shadow .25s}
+.m3 .thumb{position:absolute;top:50%;left:8px;width:16px;height:16px;margin-top:-8px;border-radius:50%;background:var(--fg3);display:grid;place-items:center;transition:transform var(--snap-d) var(--snap),width .2s var(--e-emph),height .2s var(--e-emph),margin .2s var(--e-emph),background-color .25s}
+.m3 .thumb .i{width:14px;height:14px;stroke-width:2.6;color:var(--fox);opacity:0;transition:opacity .2s}
+.m3[aria-checked="true"]{background:var(--fox);box-shadow:none}
+.m3[aria-checked="true"] .thumb{transform:translateX(20px);width:24px;height:24px;margin-top:-12px;margin-left:-4px;background:var(--fox-ink)}
+.m3[aria-checked="true"] .thumb .i{opacity:1}
+.m3:active .thumb{width:28px;height:28px;margin-top:-14px;margin-left:-6px}
+.setup-h{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px 4px}
+.setup-h h3{margin:0;font:650 11px var(--f-body);letter-spacing:.13em;text-transform:uppercase;color:var(--fg2)}
+.setup-h span{font-size:12.5px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.meter{height:4px;border-radius:4px;background:var(--line);margin:0 4px 10px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok);border-radius:4px;transition:width .6s var(--spring)}
+.setup{list-style:none;margin:0;padding:2px 0;background:var(--sheet-2);border-radius:18px}
+.setup li{display:flex;align-items:center;gap:12px;padding:11px 14px}
+.setup li + li{border-top:1px solid var(--line)}
+.setup li > div{flex:1;min-width:0}
+.setup b{display:block;font-size:14px;font-weight:600}
+.setup small{display:block;font-size:12.5px;color:var(--fg2);line-height:1.35;margin-top:1px}
+.st{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--warn-soft);color:var(--warn)}
+.st .i{width:14px;height:14px;stroke-width:2.6}
+.setup li[data-ok="1"] .st{background:var(--ok-soft);color:var(--ok)}
+.tonal-btn{flex:none;padding:8px 12px;border-radius:999px;background:var(--fox-soft);color:var(--fox);font-size:13px;font-weight:650}
+
+/* diff sheet */
+.diff{border-radius:16px;background:var(--sheet-2);padding:10px 0;overflow-x:auto;font-size:12px;line-height:1.7;margin-bottom:14px}
+.diff div{padding:0 14px;white-space:pre;min-width:max-content}
+.diff .h{color:var(--prism)}
+.diff .d{background:var(--bad-soft);color:var(--bad)}
+.diff .a{background:var(--ok-soft);color:var(--ok)}
+.diff .c{color:var(--fg2)}
+.note{display:flex;gap:10px;font-size:13px;line-height:1.45;color:var(--fg2);margin:0 0 18px;padding:12px 14px;border-radius:16px;background:var(--prism-soft)}
+.note .i{color:var(--prism);width:18px;height:18px;margin-top:1px}
+.btn-row{display:flex;gap:8px}
+.text-btn{min-height:50px;padding:0 18px;border-radius:999px;font-weight:650;color:var(--fg2)}
+
+/* snackbar */
+.snack{position:absolute;left:14px;right:14px;bottom:34px;z-index:12;display:flex;align-items:center;gap:12px;padding:12px 10px 12px 16px;border-radius:16px;background:var(--fg);color:var(--sheet);font-size:14px;font-weight:500;line-height:1.35;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.snack span{flex:1}
+.snack button{color:var(--fox);font-weight:700;padding:6px 8px;border-radius:8px;flex:none}
+
+/* gesture bar */
+.navbar{position:absolute;left:0;right:0;bottom:0;height:28px;z-index:14;display:grid;place-items:center;touch-action:none;cursor:grab}
+.navbar span{width:120px;height:5px;border-radius:5px;background:var(--fg);opacity:.75;transition:width .3s var(--e-emph)}
+.navbar:hover span{width:136px}
+
+/* ---------- phone-sized viewers: the launcher is the page ---------- */
+@media (max-width:640px){
+  .stage{padding:0;gap:0}
+  .guide{display:none}
+  .phone{height:100%;width:100%;aspect-ratio:auto;border-radius:0;padding:0;box-shadow:none;background:var(--wbase)}
+  .screen{border-radius:0}
+  .statusbar{display:none}
+  :root{--sb:10px}
+}
+@media (max-width:1000px) and (min-width:641px){ .guide{display:none} }
+@media (max-height:640px) and (min-width:641px){ .clock{font-size:52px} }
+
+@media (prefers-reduced-motion: reduce){
+  .wall,.continue::before,.ring,.spin,.lin::before,.lin::after{animation:none}
+  .ring{opacity:.25;transform:scale(.8)}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.8"/><path d="M2 19h20"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="8" r="2.2"/><path d="M6 8.2v7.6M18 10.2c0 4-6 3-11 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5.5h16v10H9l-5 4z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.8 3 2.8 14 0 17M12 3.5c-2.8 3-2.8 14 0 17"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.5"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 9.5V13l2.5 2M4.5 5.5l3-2.5M19.5 5.5l-3-2.5"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 6.5A1.5 1.5 0 0 1 5 5h4l2 2.5h8a1.5 1.5 0 0 1 1.5 1.5v8.5A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5-8.5 8.5"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9 11h6M9 15h6M14.5 3.5v4h4"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15h4.5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M16 12.5h2.5M3 9.5h15"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><path d="M12 19.2h.01"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8.5 7l-5 5 5 5M15.5 7l5 5-5 5"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.5"/><path d="M10.5 12.5L19 4M16 7l2.5 2.5"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><rect x="6" y="4.5" width="12" height="16" rx="2"/><path d="M9.5 4.5V3h5v1.5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3.5l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="i-bang" viewBox="0 0 24 24"><path d="M12 7v6M12 16.5h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 2.5v5.5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/></symbol>
+</svg>
+
+<div class="stage">
+  <aside class="guide">
+    <h1>Fox<span>.</span></h1>
+    <p>A launcher that remembers your work, not just your apps. Your Mac's last task waits on the home screen, and one tap picks it up where you left off.</p>
+    <div class="lab">Try it</div>
+    <ol>
+      <li><div>Tap <b>Continue on Mac</b><small>Watch the press, progress and done states</small></div></li>
+      <li><div>Tap the <b>MacBook Air</b> chip and switch the Mac off<small>Then Continue again: it waits in a queue and runs when the Mac is back</small></div></li>
+      <li><div><b>Hold</b> Re-run on the test card<small>Running code on your Mac needs a hold, not a tap</small></div></li>
+      <li><div>Review the suggested fix, then re-run tests<small>The result changes once the fix is applied</small></div></li>
+      <li><div>Open a Space, then drag from its left edge<small>Back gesture with a live preview</small></div></li>
+      <li><div>Drag the bottom bar up for search and all apps</div></li>
+    </ol>
+    <div class="lab">Theme</div>
+    <div class="seg" role="group" aria-label="Theme">
+      <button type="button" data-th="system" aria-pressed="true">System</button>
+      <button type="button" data-th="light" aria-pressed="false">Light</button>
+      <button type="button" data-th="dark" aria-pressed="false">Dark</button>
+    </div>
+    <p style="font-size:12.5px">Prototype sized for the POCO C71. Tasks, files and timings are sample data.</p>
+    <button type="button" class="reset" id="reset">Reset demo</button>
+  </aside>
+
+  <div class="phone">
+    <div class="screen" id="screen">
+      <div class="wall" aria-hidden="true"></div>
+
+      <div class="statusbar" aria-hidden="true">
+        <span id="sbTime">18:57</span>
+        <span class="r"><svg class="i"><use href="#i-wifi"/></svg><span class="batt">76<i></i></span></span>
+      </div>
+
+      <!-- HOME -->
+      <main class="home" id="home">
+        <div class="home-scroll" id="homeScroll">
+          <header class="top">
+            <div>
+              <div class="date" id="date">Sunday, 8 November</div>
+              <div class="clock" id="clock">18:57</div>
+            </div>
+            <button type="button" class="link-chip glass press" id="linkChip" data-s="live" aria-label="Mac connection">
+              <span class="dot" id="linkDot"></span>
+              <span><b>MacBook Air</b><small id="linkState">Live · 38 ms</small></span>
+            </button>
+          </header>
+
+          <section class="continue glass" id="continueCard" aria-label="Continue">
+            <div class="c-eyebrow"><svg class="i"><use href="#i-laptop"/></svg>Last on your Mac · <span id="contAgo">4 min ago</span></div>
+            <div class="c-title">MenuBarView.swift</div>
+            <div class="c-meta mono"><svg class="i"><use href="#i-branch"/></svg>glass_horizon · feat/menubar-view</div>
+            <div class="chips">
+              <span class="chip">Xcode</span><span class="chip">Terminal</span><span class="chip">Safari · 3 tabs</span>
+            </div>
+            <div class="c-actions">
+              <button type="button" class="cta" id="continueBtn" data-state="idle">
+                <span class="cta-ic">
+                  <svg class="i go"><use href="#i-arrow"/></svg>
+                  <svg class="spin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/></svg>
+                  <svg class="i ok" viewBox="0 0 24 24" style="stroke-width:2.6"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
+                </span>
+                <span class="cta-label">Continue on Mac</span>
+              </button>
+              <button type="button" class="ghost press" id="detailsBtn">Details</button>
+            </div>
+            <div class="c-result mono" id="contResult" aria-live="polite"></div>
+          </section>
+
+          <section aria-label="Pulse">
+            <h2 class="sec">Pulse <span>Things that need you</span></h2>
+            <div class="pulse" id="pulse">
+              <article class="pcard glass" id="pRun">
+                <div class="p-head"><span class="tag bad" id="runTag">Tests failed</span><span class="p-src" id="runSrc">Mac · 2 min ago</span></div>
+                <p class="p-title" id="runTitle">pytest: 2 failed, 238 passed</p>
+                <p class="p-sub mono" id="runSub">test/test_runtime.py::test_refine_loop</p>
+                <div class="lin" id="runProg" hidden></div>
+                <button type="button" class="p-act hold" id="holdRun"><span class="hold-fill"></span><svg class="i"><use href="#i-refresh"/></svg><span id="holdLabel">Hold to re-run on Mac</span></button>
+              </article>
+              <article class="pcard glass" id="pAlarm">
+                <div class="p-head"><span class="tag warn">Tomorrow</span><span class="p-src">Annie noticed</span></div>
+                <p class="p-title">Exam at 9:30 and no alarm set</p>
+                <p class="p-sub">Battery is 76%. You usually sleep after 1 AM before exams.</p>
+                <button type="button" class="p-act tonal rp" id="alarmBtn"><svg class="i"><use href="#i-alarm"/></svg><span>Set 7:00 alarm</span></button>
+              </article>
+              <article class="pcard glass" id="pFix">
+                <div class="p-head"><span class="tag prism" id="fixTag">Fix ready</span><span class="p-src">Fox Club</span></div>
+                <p class="p-title" id="fixTitle">Suggested fix for openai_provider.py</p>
+                <p class="p-sub mono" id="fixSub">"choice" → "choices" · 1 line</p>
+                <button type="button" class="p-act rp" id="fixBtn"><svg class="i"><use href="#i-code"/></svg><span>Review diff</span></button>
+              </article>
+            </div>
+          </section>
+
+          <section aria-label="Spaces">
+            <h2 class="sec">Spaces</h2>
+            <div class="spaces" id="spaces"></div>
+          </section>
+        </div>
+
+        <div class="bottom">
+          <button type="button" class="search-pill glass press" id="searchPill">
+            <svg class="i"><use href="#i-search"/></svg><span>Search apps, tasks, actions</span>
+            <i class="mic"><svg class="i" style="width:17px;height:17px"><use href="#i-mic"/></svg></i>
+          </button>
+          <nav class="dock" id="dock" aria-label="Dock"></nav>
+        </div>
+      </main>
+
+      <!-- SPACE -->
+      <section class="space-view" id="spaceView" hidden aria-label="Space">
+        <div class="sv-inner" id="svInner">
+          <div class="sv-head">
+            <button type="button" class="icon-btn rp" id="svBack" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+            <span class="sv-kicker" id="svKicker">Space</span>
+          </div>
+          <h1 class="sv-title" id="svTitle"></h1>
+          <p class="sv-line" id="svLine"></p>
+          <div id="svBody"></div>
+        </div>
+        <div class="sv-foot">
+          <button type="button" class="cta wide" id="svResume" data-state="idle">
+            <span class="cta-ic">
+              <svg class="i go"><use href="#i-layers"/></svg>
+              <svg class="spin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/></svg>
+              <svg class="i ok" viewBox="0 0 24 24" style="stroke-width:2.6"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
+            </span>
+            <span class="cta-label">Resume space on Mac</span>
+          </button>
+        </div>
+      </section>
+      <div class="pb-arrow" id="pbArrow" aria-hidden="true"><svg class="i"><use href="#i-back"/></svg></div>
+
+      <!-- APP -->
+      <div class="app-view" id="appView" hidden role="dialog" aria-label="App">
+        <div class="app-inner">
+          <span class="app-ic" id="appIcon"></span>
+          <h2 id="appName">App</h2>
+          <p>This stands in for the real app.<br>Tap, or drag the bottom bar up, to go home.</p>
+        </div>
+      </div>
+
+      <div class="scrim" id="scrim" hidden></div>
+
+      <!-- SEARCH SHEET -->
+      <div class="sheet tall" id="searchSheet" hidden role="dialog" aria-label="Search">
+        <div class="grab-zone"><span class="grabber"></span></div>
+        <div class="sheet-body">
+          <label class="field" for="q"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search apps, tasks, actions" autocomplete="off"></label>
+          <div id="searchIdle">
+            <div class="qa" id="qa"></div>
+            <div class="res-sec" style="margin-top:0">Jump back in</div>
+            <div class="res" id="jump"></div>
+            <div class="res-sec" style="margin:18px 0 12px">All apps</div>
+            <div class="grid" id="allApps"></div>
+          </div>
+          <div class="res" id="results" hidden></div>
+        </div>
+      </div>
+
+      <!-- LINK SHEET -->
+      <div class="sheet" id="linkSheet" hidden role="dialog" aria-label="Mac connection">
+        <div class="grab-zone"><span class="grabber"></span>
+          <div class="sh-title"><h2>MacBook Air</h2><p id="lsSub">Fox Desk is running · paired</p></div>
+        </div>
+        <div class="sheet-body">
+          <div class="radar" id="radar">
+            <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+            <span class="me"><svg class="i"><use href="#i-phone"/></svg></span>
+            <span class="mac"><svg class="i"><use href="#i-laptop"/></svg></span>
+          </div>
+          <p class="radar-cap" id="radarCap">Nearby on the same Wi-Fi. Direction is experimental.</p>
+          <div class="rows">
+            <div class="row"><span>Connection</span><b id="lsConn">Local network · 38 ms</b></div>
+            <div class="row"><span>Pairing</span><b class="mono">Pinned key 4F:9A:1C</b></div>
+            <div class="row"><span>Waiting to send</span><b id="lsQueue">Nothing</b></div>
+          </div>
+          <div class="switch-row">
+            <div><b>Mac reachable</b><small>Turn off to see what Fox does while the Mac sleeps</small></div>
+            <button type="button" class="m3" role="switch" aria-checked="true" id="macSwitch" aria-label="Mac reachable"><span class="thumb"><svg class="i"><use href="#i-check"/></svg></span></button>
+          </div>
+          <div class="setup-h"><h3>Setup on this phone</h3><span id="setupCount">4 of 5 ready</span></div>
+          <div class="meter"><i id="setupMeter" style="width:80%"></i></div>
+          <ul class="setup" id="setup">
+            <li data-ok="1"><span class="st"><svg class="i"><use href="#i-check"/></svg></span><div><b>Nearby devices</b><small>Finds your Mac over Bluetooth</small></div></li>
+            <li data-ok="1"><span class="st"><svg class="i"><use href="#i-check"/></svg></span><div><b>Background connection</b><small>Keeps Fox linked with the screen off</small></div></li>
+            <li data-ok="0" id="autoRow"><span class="st"><svg class="i"><use href="#i-bang"/></svg></span><div><b>Autostart</b><small>HyperOS stops Fox after a restart without it</small></div><button type="button" class="tonal-btn rp" id="fixAuto">Open settings</button></li>
+            <li data-ok="1"><span class="st"><svg class="i"><use href="#i-check"/></svg></span><div><b>Battery: no restrictions</b><small>Stops the system closing the link</small></div></li>
+            <li data-ok="1"><span class="st"><svg class="i"><use href="#i-check"/></svg></span><div><b>Default home app</b><small>Fox is your home screen</small></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- DIFF SHEET -->
+      <div class="sheet" id="diffSheet" hidden role="dialog" aria-label="Suggested fix">
+        <div class="grab-zone"><span class="grabber"></span>
+          <div class="sh-title"><h2>Suggested fix</h2><p class="mono" style="font-size:12px">agent_plugins/providers/openai_provider.py</p></div>
+        </div>
+        <div class="sheet-body">
+          <div class="diff mono">
+            <div class="h">@@ -41,7 +41,7 @@ def complete(self, prompt):</div>
+            <div class="c">     body = self._build(prompt)</div>
+            <div class="c">     resp = self._post("/chat/completions", body)</div>
+            <div class="d">-    return resp.json()["choice"][0]["message"]["content"]</div>
+            <div class="a">+    return resp.json()["choices"][0]["message"]["content"]</div>
+            <div class="c"> </div>
+            <div class="c"> def stream(self, prompt):</div>
+          </div>
+          <p class="note"><svg class="i"><use href="#i-shield"/></svg><span>Fox applies this in a separate worktree, <b class="mono">fox/fix-choices</b>. Your working copy stays the same until you merge.</span></p>
+          <div class="btn-row">
+            <button type="button" class="text-btn rp" id="diffDismiss">Dismiss</button>
+            <button type="button" class="cta" id="diffApply"><span class="cta-label">Apply in worktree</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="snack" id="snack" hidden role="status"><span id="snackText"></span><button type="button" id="snackAct" hidden>Undo</button></div>
+
+      <div class="navbar" id="navbar" role="button" tabindex="0" aria-label="Home and search"><span></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const root = document.documentElement;
+  const screen = $('#screen'), home = $('#home'), scrim = $('#scrim');
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  let RM = mq.matches; mq.addEventListener?.('change', e => RM = e.matches);
+
+  /* ---------- springs: simulate a damped spring and hand it to CSS linear() ---------- */
+  function spring(k, c) {
+    let x = 0, v = 0, t = 0; const dt = 1 / 1000, s = [0];
+    while (t < 2.5) { v += (-k * (x - 1) - c * v) * dt; x += v * dt; t += dt; s.push(x);
+      if (t > .1 && Math.abs(1 - x) < .001 && Math.abs(v) < .01) break; }
+    const n = 50, p = [];
+    for (let i = 0; i <= n; i++) p.push(+s[Math.round(i / n * (s.length - 1))].toFixed(4));
+    p[0] = 0; p[n] = 1;
+    return { easing: `linear(${p.join(', ')})`, duration: Math.round(t * 1000) };
+  }
+  const hasLinear = !!(window.CSS && CSS.supports && CSS.supports('transition-timing-function', 'linear(0, 1)'));
+  const S = hasLinear
+    ? { smooth: spring(210, 28.8), snappy: spring(380, 25) }   // ~critically damped / light bounce
+    : { smooth: { easing: 'cubic-bezier(.2,0,0,1)', duration: 480 }, snappy: { easing: 'cubic-bezier(.2,0,0,1)', duration: 340 } };
+  if (hasLinear) {
+    root.style.setProperty('--spring', S.smooth.easing); root.style.setProperty('--spring-d', S.smooth.duration + 'ms');
+    root.style.setProperty('--snap', S.snappy.easing); root.style.setProperty('--snap-d', S.snappy.duration + 'ms');
+  }
+
+  function anim(el, kf, o) {
+    o = { ...o }; if (RM) o.duration = Math.min(o.duration || 200, 140), o.delay = 0;
+    const a = el.animate(kf, { fill: 'forwards', ...o });
+    return a.finished.then(() => { try { a.commitStyles(); } catch (e) {} a.cancel(); }).catch(() => {});
+  }
+  const later = (fn, ms) => setTimeout(fn, ms);
+  const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+  const svg = (id, cls = 'i') => `<svg class="${cls}"><use href="#i-${id}"/></svg>`;
+
+  /* ---------- data (sample) ---------- */
+  const APPS = {
+    phone: { n: 'Phone', i: 'phone', c: '--a-green' }, chat: { n: 'Messages', i: 'chat', c: '--a-blue' },
+    browser: { n: 'Browser', i: 'globe', c: '--a-orange' }, camera: { n: 'Camera', i: 'camera', c: '--a-slate' },
+    calendar: { n: 'Calendar', i: 'calendar', c: '--a-blue' }, clock: { n: 'Clock', i: 'alarm', c: '--a-violet' },
+    files: { n: 'Files', i: 'folder', c: '--a-yellow' }, finance: { n: 'Finance', i: 'wallet', c: '--a-teal' },
+    fox: { n: 'Fox Desk', i: 'laptop', c: '--a-orange' }, mail: { n: 'Mail', i: 'mail', c: '--a-red' },
+    maps: { n: 'Maps', i: 'pin', c: '--a-green' }, music: { n: 'Music', i: 'music', c: '--a-pink' },
+    notes: { n: 'Notes', i: 'note', c: '--a-yellow' }, photos: { n: 'Photos', i: 'photo', c: '--a-pink' },
+    settings: { n: 'Settings', i: 'gear', c: '--a-slate' }, termux: { n: 'Termux', i: 'terminal', c: '--a-slate' }
+  };
+  const DOCK = ['phone', 'chat', 'browser', 'camera'];
+  const SPACES = {
+    glass: { name: 'Glass Horizon', icon: 'sparkle', c: '--a-teal', line: 'Menu bar app and Android link', count: '3 tasks',
+      tasks: [['Write MenuBarView.swift', 'Bind it to DeviceCellEngine', false], ['Fix double reconnect', 'brokenGlassPreventionProtocol · Kotlin', false], ['Create PrintWriter once per socket', 'waveLength()', true]],
+      mac: [['Xcode', 'MenuBarView.swift', 'code'], ['Terminal', '~/glass_horizon · zsh', 'terminal'], ['Safari', 'NWBrowser docs and 2 more', 'globe']],
+      files: ['DeviceCellEngine.swift', 'LazyBonjour.swift', 'TODO.md'] },
+    college: { name: 'College', icon: 'calendar', c: '--a-orange', line: 'Exam tomorrow at 9:30', count: '2 due',
+      tasks: [['Revise units 3 and 4', 'Exam tomorrow at 9:30', false], ['IPP patent claim draft', 'Group of six · due Friday', false], ['Submit lab record', 'Done Thursday', true]],
+      mac: [['Notes', 'Unit 3 summary', 'note'], ['Safari', 'Previous papers and 4 more', 'globe']],
+      files: ['unit3-notes.pdf', 'ipp-claims-draft.docx'] },
+    mates: { name: 'Mates-Helper', icon: 'terminal', c: '--a-green', line: 'Hack Club 3am · 19 to-dos left', count: '19 left',
+      tasks: [['Fix "choice" → "choices"', 'openai_provider.py · fix ready', false], ['Delete empty utils.py and root test.py', 'Cleanup phase 2', false], ['Pin plotext==5.2.8', 'requirements.md', true]],
+      mac: [['VS Code', 'runtime.py', 'code'], ['Terminal', 'pytest -q', 'terminal'], ['Ollama', 'qwen3:4b', 'sparkle']],
+      files: ['runtime.py', 'executor.py', 'requirements.md'] },
+    life: { name: 'Life', icon: 'wallet', c: '--a-violet', line: '₹450 spent this week', count: '2 notes',
+      tasks: [['Order NVMe enclosure', 'Crucial P3 1TB · ask for a GST invoice', false], ['Check expense summary', 'Food is the top category', true]],
+      mac: [['Safari', 'Shopping cart', 'globe']], files: ['gpay-oct.csv'] }
+  };
+  const ACTIONS = [
+    { n: 'Continue on Mac', d: 'MenuBarView.swift', i: 'arrow', run: () => $('#continueBtn').click() },
+    { n: 'Resume all on Mac', d: 'Every space you had open', i: 'layers', run: () => { toast(mac.online ? 'Restoring 4 spaces on your Mac' : 'Mac is offline. Saved to the queue.'); } },
+    { n: 'Send clipboard to Mac', d: 'Text only', i: 'clip', run: () => toast(mac.online ? 'Sent to MacBook Air' : 'Mac is offline. Saved to the queue.') },
+    { n: 'Set alarm for 7:00', d: 'Clock', i: 'alarm', run: () => $('#alarmBtn').click() },
+    { n: 'Mac connection', d: 'Pairing, setup and status', i: 'laptop', run: () => openSheet('linkSheet') }
+  ];
+
+  /* ---------- render static lists ---------- */
+  const appTile = (id, extra = '') => { const a = APPS[id];
+    return `<button type="button" class="app press" data-app="${id}" ${extra}><span class="app-ic" style="--ac:var(${a.c})">${svg(a.i)}</span><span>${a.n}</span></button>`; };
+  $('#dock').innerHTML = DOCK.map(id => appTile(id, `aria-label="${APPS[id].n}"`)).join('');
+  $('#allApps').innerHTML = Object.keys(APPS).map(id => appTile(id)).join('');
+  $('#spaces').innerHTML = Object.entries(SPACES).map(([id, s]) => `
+    <button type="button" class="space glass press" data-space="${id}" style="--sc:var(${s.c})">
+      <span class="sp-top"><span class="sp-dot">${svg(s.icon)}</span><span class="sp-count">${s.count}</span></span>
+      <span class="sp-name">${s.name}</span><span class="sp-line">${s.line}</span>
+    </button>`).join('');
+  $('#qa').innerHTML = ACTIONS.slice(0, 4).map((a, i) => `<button type="button" class="rp" data-act="${i}">${svg(a.i)}${a.n}</button>`).join('');
+  $('#jump').innerHTML = [['glass', 'MenuBarView.swift', 'Glass Horizon · 4 min ago'], ['mates', 'Fix "choice" → "choices"', 'Mates-Helper · fix ready']]
+    .map(([sp, n, d]) => `<button type="button" class="rp" data-goto="${sp}"><span class="app-ic" style="--ac:var(${SPACES[sp].c})">${svg(SPACES[sp].icon)}</span><div><b>${n}</b><small>${d}</small></div></button>`).join('');
+
+  /* ---------- clock ---------- */
+  function tickClock() {
+    const d = new Date(), t = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    $('#clock').textContent = t; $('#sbTime').textContent = t;
+    $('#date').textContent = d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  tickClock(); setInterval(tickClock, 15000);
+
+  /* ---------- ripple (Material) ---------- */
+  screen.addEventListener('pointerdown', e => {
+    const t = e.target.closest('.rp'); if (!t || RM) return;
+    const r = t.getBoundingClientRect(), d = Math.hypot(r.width, r.height) * 2;
+    const s = document.createElement('span'); s.className = 'ripple';
+    s.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
+    t.appendChild(s);
+    s.animate([{ transform: 'scale(0)', opacity: .16 }, { transform: 'scale(1)', opacity: .12 }], { duration: 450, easing: 'cubic-bezier(.2,0,0,1)', fill: 'forwards' });
+    const end = () => { s.animate([{ opacity: .12 }, { opacity: 0 }], { duration: 280, fill: 'forwards' }).finished.then(() => s.remove());
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => t.removeEventListener(ev, end)); };
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => t.addEventListener(ev, end));
+  });
+
+  /* ---------- snackbar ---------- */
+  let snackT;
+  function toast(msg, action) {
+    const sn = $('#snack'), b = $('#snackAct');
+    clearTimeout(snackT); $('#snackText').textContent = msg;
+    b.hidden = !action; if (action) { b.textContent = action.label; b.onclick = () => { action.run(); hideSnack(); }; }
+    if (sn.hidden) { sn.hidden = false; anim(sn, [{ transform: 'translateY(24px) scale(.96)', opacity: 0 }, { transform: 'none', opacity: 1 }], S.snappy); }
+    else anim($('#snackText'), [{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
+    snackT = later(hideSnack, action ? 4500 : 3000);
+  }
+  function hideSnack() { const sn = $('#snack'); if (sn.hidden) return;
+    anim(sn, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(12px)' }], { duration: 200, easing: 'cubic-bezier(.3,0,.8,.15)' }).then(() => { sn.hidden = true; sn.style.cssText = ''; }); }
+
+  /* ---------- Mac link state ---------- */
+  const mac = { online: true, queue: [] };
+  function renderLink() {
+    const chip = $('#linkChip'), q = mac.queue.length;
+    chip.dataset.s = !mac.online ? (q ? 'queued' : 'off') : 'live';
+    $('#linkState').textContent = mac.online ? 'Live · 38 ms' : q ? `Offline · ${q} waiting` : 'Offline';
+    $('#lsSub').textContent = mac.online ? 'Fox Desk is running · paired' : 'Not reachable · last seen just now';
+    $('#lsConn').textContent = mac.online ? 'Local network · 38 ms' : 'Not reachable';
+    $('#lsQueue').textContent = q ? `${q} action${q > 1 ? 's' : ''}` : 'Nothing';
+    $('#radarCap').textContent = mac.online ? 'Nearby on the same Wi-Fi. Direction is experimental.' : 'Looking for your Mac…';
+    $('#radar').toggleAttribute('data-off', !mac.online);
+    $('#macSwitch').setAttribute('aria-checked', String(mac.online));
+  }
+  function setMac(on) {
+    mac.online = on; buzz(8); renderLink();
+    if (on) {
+      const d = $('#linkDot'); d.classList.remove('blip'); void d.offsetWidth; d.classList.add('blip');
+      const q = mac.queue.splice(0);
+      if (q.length) { renderLink(); toast(`Mac is back. Sending ${q.length} waiting action${q.length > 1 ? 's' : ''}.`); }
+      q.forEach((job, i) => later(job, 500 + i * 400));
+    }
+  }
+  $('#macSwitch').onclick = () => setMac(!mac.online);
+
+  /* ---------- Continue: press → progress → done, or queued after 1.5 s ---------- */
+  function ctaLabel(btn, text) {
+    const l = $('.cta-label', btn); l.textContent = text;
+    anim(l, [{ opacity: 0, transform: 'translateY(7px)', filter: 'blur(3px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], S.snappy);
+  }
+  function runResume(btn, idleLabel, resultEl, resultText) {
+    if (btn.dataset.state === 'busy' || btn.dataset.state === 'done') return;
+    if (btn.dataset.state === 'queued') { toast('Already waiting for your Mac'); return; }
+    buzz(10); btn.dataset.state = 'busy'; ctaLabel(btn, 'Opening on Mac…');
+    const t0 = performance.now();
+    const finish = () => {
+      btn.dataset.state = 'done'; buzz([12, 50, 14]);
+      ctaLabel(btn, 'Open on your Mac');
+      anim(btn, [{ transform: 'scale(.97)' }, { transform: 'scale(1)' }], S.snappy);
+      if (resultEl) { resultEl.classList.remove('q'); resultEl.innerHTML = `${svg('check')}${resultText} · ${((performance.now() - t0) / 1000).toFixed(1)} s`;
+        anim(resultEl, [{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], S.smooth); }
+      later(() => { btn.dataset.state = 'idle'; ctaLabel(btn, idleLabel); }, 2800);
+    };
+    if (mac.online) later(finish, 780 + Math.random() * 220);
+    else later(() => {
+      if (btn.dataset.state !== 'busy') return;
+      btn.dataset.state = 'queued'; ctaLabel(btn, 'Waiting for Mac'); buzz(20);
+      if (resultEl) { resultEl.classList.add('q'); resultEl.textContent = 'Mac is asleep or off this network. This runs as soon as it is back.'; }
+      mac.queue.push(() => { btn.dataset.state = 'busy'; ctaLabel(btn, 'Sending…'); later(finish, 650); });
+      renderLink();
+    }, 1500);
+  }
+  $('#continueBtn').onclick = e => runResume(e.currentTarget, 'Continue on Mac', $('#contResult'), 'Restored Xcode, Terminal and 3 tabs');
+  $('#detailsBtn').onclick = () => openSpace($('[data-space="glass"]'));
+
+  /* ---------- Pulse: hold to re-run ---------- */
+  const st = { patched: false, running: false, passed: false };
+  (function hold(btn, onDone) {
+    const fill = $('.hold-fill', btn); let a = null, done = false, t0 = 0;
+    const start = e => {
+      if (st.running || st.passed) return;
+      done = false; t0 = performance.now();
+      try { e.pointerId != null && btn.setPointerCapture(e.pointerId); } catch (_) {}
+      a && a.cancel(); buzz(5);
+      a = fill.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 850, easing: 'linear', fill: 'forwards' });
+      a.onfinish = () => { if (a.playbackRate > 0 && !done) { done = true; onDone(); fill.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).finished.then(() => a.cancel()); } };
+    };
+    const stop = () => {
+      if (a && !done && a.playState === 'running') {
+        a.playbackRate = -3;
+        if (performance.now() - t0 < 300) toast('Hold to re-run. This runs code on your Mac.');
+      }
+    };
+    btn.addEventListener('pointerdown', start);
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => btn.addEventListener(ev, stop));
+    btn.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); start(e); } });
+    btn.addEventListener('keyup', e => { if (e.key === 'Enter' || e.key === ' ') stop(); });
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+  })($('#holdRun'), rerun);
+
+  function rerun() {
+    buzz([10, 40, 18]);
+    if (!mac.online) {
+      $('#holdLabel').textContent = 'Waiting for Mac'; $('#runSrc').textContent = 'Waiting';
+      mac.queue.push(rerun); renderLink(); toast('Mac is offline. The test run will start when it is back.'); return;
+    }
+    st.running = true; $('#runProg').hidden = false; $('#holdLabel').textContent = 'Running…';
+    $('#runTitle').textContent = 'Running pytest on MacBook Air…'; $('#runSrc').textContent = 'Now';
+    later(() => {
+      st.running = false; $('#runProg').hidden = true;
+      const tag = $('#runTag');
+      if (st.patched) {
+        st.passed = true;
+        tag.className = 'tag ok'; tag.textContent = 'Passed';
+        $('#runTitle').textContent = 'pytest: 240 passed in 11.2 s';
+        $('#runSub').textContent = 'on worktree fox/fix-choices';
+        const b = $('#holdRun'); b.disabled = true; $('#holdLabel').textContent = 'All tests pass';
+        b.querySelector('use').setAttribute('href', '#i-check');
+        toast('All 240 tests pass with the fix');
+      } else {
+        $('#runTitle').textContent = 'pytest: still 2 failed, 238 passed';
+        $('#runSub').textContent = 'Same tests. A fix is waiting for review.';
+        $('#holdLabel').textContent = 'Hold to re-run on Mac';
+        toast('Same 2 tests failed', { label: 'Review fix', run: () => openSheet('diffSheet') });
+      }
+      $('#runSrc').textContent = 'Just now';
+      anim($('#pRun'), [{ transform: 'scale(.98)' }, { transform: 'scale(1)' }], S.snappy);
+    }, 2400);
+  }
+
+  /* ---------- Pulse: alarm ---------- */
+  const alarmBtn = $('#alarmBtn');
+  function setAlarm(on) {
+    alarmBtn.disabled = on;
+    alarmBtn.querySelector('span').textContent = on ? 'Alarm set for 7:00' : 'Set 7:00 alarm';
+    alarmBtn.querySelector('use').setAttribute('href', on ? '#i-check' : '#i-alarm');
+    anim(alarmBtn, [{ transform: 'scale(.96)' }, { transform: 'scale(1)' }], S.snappy);
+  }
+  alarmBtn.onclick = () => { if (alarmBtn.disabled) return; buzz(10); setAlarm(true); toast('Alarm set for 7:00 AM', { label: 'Undo', run: () => setAlarm(false) }); };
+
+  /* ---------- Pulse: patch review ---------- */
+  $('#fixBtn').onclick = () => openSheet('diffSheet');
+  $('#diffDismiss').onclick = () => closeSheet();
+  $('#diffApply').onclick = () => {
+    if (st.patched) { closeSheet(); return; }
+    st.patched = true; buzz([10, 40, 14]); closeSheet();
+    const tag = $('#fixTag'); tag.className = 'tag ok'; tag.textContent = 'Applied';
+    $('#fixTitle').textContent = 'Fix applied in a worktree';
+    $('#fixSub').textContent = 'fox/fix-choices · working copy untouched';
+    $('#fixBtn span').textContent = 'View diff';
+    $('#diffApply .cta-label').textContent = 'Close';
+    later(() => toast('Applied in fox/fix-choices', { label: 'Run tests', run: () => { $('#pulse').scrollTo({ left: 0, behavior: RM ? 'auto' : 'smooth' }); later(rerun, 350); } }), 250);
+  };
+
+  /* ---------- link sheet: setup fix ---------- */
+  $('#fixAuto').onclick = e => {
+    const row = $('#autoRow'); e.currentTarget.textContent = 'Checking…';
+    later(() => {
+      row.dataset.ok = '1'; row.querySelector('.st use').setAttribute('href', '#i-check');
+      e.target.remove(); buzz(10);
+      $('#setupCount').textContent = '5 of 5 ready'; $('#setupMeter').style.width = '100%';
+      anim(row.querySelector('.st'), [{ transform: 'scale(.4)' }, { transform: 'scale(1)' }], S.snappy);
+    }, 900);
+  };
+  $('#linkChip').onclick = () => openSheet('linkSheet');
+
+  /* ---------- sheets (Apple-style drag with rubber band, Material scrim) ---------- */
+  let openEl = null;
+  function openSheet(id) {
+    const el = $('#' + id);
+    if (openEl === el) return;
+    if (openEl) closeSheet(openEl, true);
+    openEl = el; el.hidden = false; scrim.hidden = false; el.style.transform = ''; scrim.style.opacity = '';
+    anim(scrim, [{ opacity: 0 }, { opacity: 1 }], { duration: 280, easing: 'linear' });
+    anim(el, [{ transform: 'translateY(105%)' }, { transform: 'translateY(0)' }], S.smooth);
+    buzz(6);
+    if (id === 'searchSheet') { $('#q').value = ''; renderSearch(''); later(() => $('#q').focus({ preventScroll: true }), RM ? 0 : 260); }
+  }
+  function closeSheet(el = openEl, instant) {
+    if (!el) return;
+    if (el === openEl) openEl = null;
+    const from = el.style.transform || 'translateY(0)';
+    anim(el, [{ transform: from }, { transform: 'translateY(105%)' }], { duration: instant ? 1 : 280, easing: 'cubic-bezier(.3,0,.8,.15)' })
+      .then(() => { if (openEl !== el) { el.hidden = true; el.style.transform = ''; } });
+    const o0 = getComputedStyle(scrim).opacity;
+    anim(scrim, [{ opacity: o0 }, { opacity: 0 }], { duration: instant ? 1 : 260, easing: 'linear' })
+      .then(() => { if (!openEl) { scrim.hidden = true; scrim.style.opacity = ''; } });
+    document.activeElement && document.activeElement.blur && el.contains(document.activeElement) && document.activeElement.blur();
+  }
+  scrim.onclick = () => closeSheet();
+  $$('.sheet').forEach(el => {
+    const zone = $('.grab-zone', el); let y0 = 0, dy = 0, h = 1, on = false, samp = [];
+    zone.addEventListener('pointerdown', e => {
+      on = true; y0 = e.clientY; dy = 0; h = el.offsetHeight; samp = [[e.timeStamp, 0]];
+      el.getAnimations().forEach(a => a.cancel());
+      try { zone.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    zone.addEventListener('pointermove', e => {
+      if (!on) return; dy = e.clientY - y0;
+      const y = dy < 0 ? -Math.pow(-dy, .62) : dy;            // rubber band upward
+      el.style.transform = `translateY(${y}px)`;
+      scrim.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / h));
+      samp.push([e.timeStamp, dy]); if (samp.length > 5) samp.shift();
+    });
+    const end = () => {
+      if (!on) return; on = false;
+      const [t0, d0] = samp[0], [t1, d1] = samp[samp.length - 1], v = (d1 - d0) / Math.max(1, t1 - t0);
+      if (dy > h * .28 || v > .55) closeSheet(el);
+      else if (Math.abs(dy) > 2) { anim(el, [{ transform: el.style.transform }, { transform: 'translateY(0)' }], S.snappy); anim(scrim, [{ opacity: scrim.style.opacity || 1 }, { opacity: 1 }], { duration: 200 }); }
+    };
+    zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end);
+  });
+
+  /* ---------- search ---------- */
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const hl = (s, q) => { const i = s.toLowerCase().indexOf(q); return i < 0 ? esc(s) : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + q.length)) + '</mark>' + esc(s.slice(i + q.length)); };
+  const INDEX = [
+    ...Object.entries(SPACES).flatMap(([sp, s]) => s.tasks.filter(t => !t[2]).map(t => ({ k: 'Tasks', n: t[0], d: `${s.name} · ${t[1]}`, i: s.icon, c: s.c, go: sp }))),
+    ...Object.entries(SPACES).map(([sp, s]) => ({ k: 'Spaces', n: s.name, d: s.line, i: s.icon, c: s.c, go: sp })),
+    ...ACTIONS.map((a, i) => ({ k: 'Actions', n: a.n, d: a.d, i: a.i, c: '--a-orange', act: i })),
+    ...Object.entries(APPS).map(([id, a]) => ({ k: 'Apps', n: a.n, d: 'App', i: a.i, c: a.c, app: id }))
+  ];
+  function renderSearch(raw) {
+    const q = raw.trim().toLowerCase(), idle = $('#searchIdle'), out = $('#results');
+    idle.hidden = !!q; out.hidden = !q; if (!q) return;
+    const hits = INDEX.filter(x => (x.n + ' ' + x.d).toLowerCase().includes(q));
+    if (!hits.length) { out.innerHTML = `<p class="empty">Nothing matches “${esc(raw.trim())}”. Try a file, app or space name.</p>`; return; }
+    const order = ['Actions', 'Tasks', 'Spaces', 'Apps']; let first = true;
+    out.innerHTML = order.map(k => { const g = hits.filter(h => h.k === k); if (!g.length) return '';
+      return `<div class="res-sec">${k}</div>` + g.map(h => { const cls = first ? 'rp first' : 'rp'; first = false;
+        const data = h.go ? `data-goto="${h.go}"` : h.app ? `data-app="${h.app}"` : `data-act="${h.act}"`;
+        return `<button type="button" class="${cls}" ${data}><span class="app-ic" style="--ac:var(${h.c})">${svg(h.i)}</span><div><b>${hl(h.n, q)}</b><small>${esc(h.d)}</small></div></button>`; }).join(''); }).join('');
+  }
+  $('#q').addEventListener('input', e => renderSearch(e.target.value));
+  $('#q').addEventListener('keydown', e => { if (e.key === 'Enter') { const f = $('#results .first'); f && f.click(); } });
+  $('#searchPill').onclick = () => openSheet('searchSheet');
+  $('#searchSheet').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.goto) { closeSheet(); later(() => openSpace($(`[data-space="${b.dataset.goto}"]`)), 120); }
+    else if (b.dataset.act) { closeSheet(); later(() => ACTIONS[+b.dataset.act].run(), 150); }
+    else if (b.dataset.app) { openApp(b, true); }
+  });
+  $('#qa').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('[data-act]'); if (b) { closeSheet(); later(() => ACTIONS[+b.dataset.act].run(), 150); } });
+
+  /* ---------- shared-element morph helpers ---------- */
+  function insetFor(el) {
+    const r = el.getBoundingClientRect(), s = screen.getBoundingClientRect();
+    return `inset(${r.top - s.top}px ${s.right - r.right}px ${s.bottom - r.bottom}px ${r.left - s.left}px round 22px)`;
+  }
+  const FULL = 'inset(0px 0px 0px 0px round 0px)';
+  function homeBack(on) {
+    return on
+      ? anim(home, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.94)', opacity: .35 }], S.smooth)
+      : anim(home, [{ transform: home.style.transform || 'scale(.94)', opacity: home.style.opacity || .35 }, { transform: 'scale(1)', opacity: 1 }], S.smooth)
+          .then(() => { home.style.transform = ''; home.style.opacity = ''; });
+  }
+  function unscaledInset(el) { const t = home.style.transform, o = home.style.opacity; home.style.transform = 'none';
+    const v = insetFor(el); home.style.transform = t; home.style.opacity = o; return v; }
+
+  /* ---------- spaces ---------- */
+  const sv = $('#spaceView'); let curTile = null;
+  function renderSpace(id) {
+    const s = SPACES[id]; sv.style.setProperty('--sc', `var(${s.c})`);
+    $('#svKicker').textContent = 'Space'; $('#svTitle').textContent = s.name; $('#svLine').textContent = s.line;
+    $('#svBody').innerHTML = `
+      <h2 class="sec">Next up</h2>
+      <div class="group">${s.tasks.map(t => `<button type="button" class="trow rp" role="checkbox" aria-checked="${t[2]}"><span class="box">${svg('check')}</span><div><b>${esc(t[0])}</b><small>${esc(t[1])}</small></div></button>`).join('')}</div>
+      <h2 class="sec">Open on your Mac</h2>
+      <div class="group">${s.mac.map(m => `<div class="trow mrow"><span class="app-ic" style="--ac:var(${s.c})">${svg(m[2])}</span><div><b>${esc(m[0])}</b><small class="mono">${esc(m[1])}</small></div></div>`).join('')}</div>
+      <h2 class="sec">Recent files</h2>
+      <div class="files">${s.files.map(f => `<span class="chip mono">${esc(f)}</span>`).join('')}</div>`;
+    $('#svInner').scrollTop = 0;
+    const r = $('#svResume'); r.dataset.state = 'idle'; $('.cta-label', r).textContent = 'Resume space on Mac';
+  }
+  $('#svBody').addEventListener('click', e => {
+    const row = e.target.closest('.trow[role="checkbox"]'); if (!row) return;
+    const on = row.getAttribute('aria-checked') !== 'true'; row.setAttribute('aria-checked', on); buzz(on ? 10 : 5);
+    anim($('.box', row), [{ transform: 'scale(.8)' }, { transform: 'scale(1)' }], S.snappy);
+  });
+  $('#svResume').onclick = e => runResume(e.currentTarget, 'Resume space on Mac', null, '');
+  function openSpace(tile) {
+    if (!tile || !sv.hidden) return;
+    curTile = tile; renderSpace(tile.dataset.space); buzz(8);
+    sv.hidden = false; sv.style.transform = ''; sv.style.borderRadius = '';
+    anim(sv, [{ clipPath: insetFor(tile) }, { clipPath: FULL }], S.smooth);
+    anim($('#svInner'), [{ opacity: 0, transform: 'translateY(26px)' }, { opacity: 1, transform: 'none' }], { ...S.smooth, delay: 50 });
+    anim($('.sv-foot'), [{ opacity: 0, transform: 'translateY(30px)' }, { opacity: 1, transform: 'none' }], { ...S.smooth, delay: 110 });
+    homeBack(true);
+  }
+  function closeSpace() {
+    if (sv.hidden || !curTile) return;
+    const to = unscaledInset(curTile), from = sv.style.transform || 'none', br = sv.style.borderRadius || '0px';
+    anim($('#svInner'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'linear' });
+    anim($('.sv-foot'), [{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: 'linear' });
+    anim(sv, [{ clipPath: FULL, transform: from, borderRadius: br }, { clipPath: to, transform: 'none', borderRadius: '22px' }], S.smooth)
+      .then(() => { sv.hidden = true; sv.style.clipPath = ''; sv.style.transform = ''; sv.style.borderRadius = '';
+        $('#svInner').style.opacity = ''; $('.sv-foot').style.opacity = ''; });
+    homeBack(false);
+  }
+  $('#spaces').addEventListener('click', e => { const t = e.target.closest('[data-space]'); t && openSpace(t); });
+  $('#svBack').onclick = closeSpace;
+
+  // Predictive back: drag from the left edge, see the page shrink, release past 25% to go back
+  (() => {
+    let x0 = null, w = 1, p = 0; const arrow = $('#pbArrow');
+    sv.addEventListener('pointerdown', e => {
+      const s = screen.getBoundingClientRect(); if (e.clientX - s.left > 30) return;
+      x0 = e.clientX; w = s.width; p = 0; try { sv.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    sv.addEventListener('pointermove', e => {
+      if (x0 == null) return; const dx = Math.max(0, e.clientX - x0); p = Math.min(dx / w, 1);
+      sv.style.transform = `translateX(${dx * .1}px) scale(${1 - p * .1})`; sv.style.borderRadius = `${Math.min(36, p * 120)}px`;
+      arrow.style.opacity = String(Math.min(1, p * 4)); arrow.style.transform = `translateX(${Math.min(p * 60, 16)}px) scale(${p > .25 ? 1.1 : .9})`;
+      home.style.opacity = String(.35 + p * .5);
+    });
+    const end = () => {
+      if (x0 == null) return; x0 = null;
+      anim(arrow, [{ opacity: arrow.style.opacity || 0 }, { opacity: 0 }], { duration: 150 });
+      if (p > .25) { buzz(8); closeSpace(); }
+      else { anim(sv, [{ transform: sv.style.transform || 'none', borderRadius: sv.style.borderRadius || '0px' }, { transform: 'none', borderRadius: '0px' }], S.snappy); home.style.opacity = '.35'; }
+    };
+    sv.addEventListener('pointerup', end); sv.addEventListener('pointercancel', end);
+  })();
+
+  /* ---------- app launch (icon grows into the app, shrinks back into the icon) ---------- */
+  const av = $('#appView'); let curApp = null;
+  function openApp(btn, fromSheet) {
+    const a = APPS[btn.dataset.app]; if (!a) return;
+    const src = btn.querySelector('.app-ic') || btn;
+    curApp = fromSheet ? null : src; buzz(8);
+    av.style.setProperty('--ac', `var(${a.c})`);
+    $('#appIcon').style.setProperty('--ac', `var(${a.c})`); $('#appIcon').innerHTML = svg(a.i); $('#appName').textContent = a.n;
+    const fromClip = insetFor(src);
+    if (fromSheet) closeSheet(undefined, true);
+    av.hidden = false;
+    anim(av, [{ clipPath: fromClip.replace('22px', '18px') }, { clipPath: FULL }], S.smooth);
+    anim($('.app-inner', av), [{ opacity: 0, transform: 'scale(.55)' }, { opacity: 1, transform: 'none' }], S.smooth);
+    homeBack(true);
+  }
+  function closeApp() {
+    if (av.hidden) return;
+    let to;
+    if (curApp) to = unscaledInset(curApp).replace('22px', '18px');
+    else { const s = screen.getBoundingClientRect(); const x = s.width / 2 - 28, y = s.height * .45; to = `inset(${y}px ${x}px ${s.height - y - 56}px ${x}px round 18px)`; }
+    anim($('.app-inner', av), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.6)' }], { duration: 200, easing: 'linear' });
+    anim(av, [{ clipPath: FULL }, { clipPath: to }], S.smooth).then(() => { av.hidden = true; av.style.clipPath = ''; $('.app-inner', av).style.cssText = ''; });
+    homeBack(false);
+  }
+  $('#dock').addEventListener('click', e => { const b = e.target.closest('[data-app]'); b && openApp(b); });
+  av.onclick = closeApp;
+
+  /* ---------- gesture bar: swipe up = home, or search from home ---------- */
+  function goHome() {
+    if (!av.hidden) return closeApp();
+    if (openEl) return closeSheet();
+    if (!sv.hidden) return closeSpace();
+    openSheet('searchSheet');
+  }
+  (() => {
+    const nb = $('#navbar'); let y0 = null, moved = false;
+    nb.addEventListener('pointerdown', e => { y0 = e.clientY; moved = false; try { nb.setPointerCapture(e.pointerId); } catch (_) {} });
+    nb.addEventListener('pointermove', e => { if (y0 != null && y0 - e.clientY > 24 && !moved) { moved = true; goHome(); } });
+    nb.addEventListener('pointerup', () => { if (y0 != null && !moved) goHome(); y0 = null; });
+    nb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goHome(); } });
+  })();
+  // swipe up on the home shelf opens search too
+  (() => {
+    const sh = $('.bottom'); let y0 = null;
+    sh.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; y0 = e.clientY; });
+    sh.addEventListener('pointermove', e => { if (y0 != null && y0 - e.clientY > 40) { y0 = null; openSheet('searchSheet'); } });
+    sh.addEventListener('pointerup', () => y0 = null);
+  })();
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!av.hidden) closeApp(); else if (openEl) closeSheet(); else if (!sv.hidden) closeSpace();
+  });
+
+  /* ---------- guide controls ---------- */
+  $$('.seg button').forEach(b => b.onclick = () => {
+    $$('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    if (b.dataset.th === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', b.dataset.th);
+  });
+  $('#reset').onclick = () => location.reload();
+
+  /* ---------- entrance: home settles in once ---------- */
+  if (!RM) {
+    const parts = [$('.top'), $('#continueCard'), $('#pulse'), $('#spaces'), $('.bottom')];
+    parts.forEach((p, i) => anim(p, [{ opacity: 0, transform: 'translateY(18px) scale(.985)' }, { opacity: 1, transform: 'none' }], { ...S.smooth, delay: 60 + i * 55 })
+      .then(() => { p.style.opacity = ''; p.style.transform = ''; }));
+  }
+  renderLink();
+})();
+</script>

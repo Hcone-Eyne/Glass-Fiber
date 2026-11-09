@@ -1,0 +1,13 @@
+{
+  "title": "hello",
+  "description": "First message on a new connection, sent by both sides.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["role", "device_name", "app_version", "protocol"],
+  "properties": {
+    "role": { "type": "string", "enum": ["desk", "mobile"] },
+    "device_name": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "app_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "protocol": { "type": "integer", "const": 1 }
+  }
+}

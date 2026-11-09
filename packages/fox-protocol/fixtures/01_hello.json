@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "hello",
+  "id": "msg_01J9Z8K4M2",
+  "epoch": 1,
+  "seq": 0,
+  "ts": 1794204090000,
+  "payload": {
+    "role": "desk",
+    "device_name": "MacBook Air",
+    "app_version": "0.1.0",
+    "protocol": 1
+  }
+}
