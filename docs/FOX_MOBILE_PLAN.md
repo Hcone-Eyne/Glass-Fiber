@@ -166,6 +166,63 @@ Prototype reference: `.work`, `.next`, `#words`, `fitWords()`, `showWords()`.
 
 ---
 
+## Phase 4.5: Speed (do this right after Phase 4, before adding anything else)
+
+**Measured on Enoch's POCO, 10 Nov, with the Phase 3 debug build** (wallpaper, clock and tilt only):
+- the screen ran at **60 Hz**, not the panel's 120
+- median frame 15 ms; 90th percentile 18 ms
+- about 1 in 3 frames missed its deadline (102 of 319 in 6 s)
+
+The phone's settings ask for 120 Hz (`peak_refresh_rate` and `min_refresh_rate` are both 120). SurfaceFlinger still ran Fox at 60 Hz, because HyperOS caps apps that don't ask for a rate. Every later phase adds more on screen, so fix the base now.
+
+1. **Ask for 120 Hz.**
+   - In `MainActivity` (in `onCreate` and again in `onResume`), pick the display mode with the highest `refreshRate` at the current resolution from `display.supportedModes`. On this phone that's mode id 2, 120 Hz. Set it as `window.attributes.preferredDisplayModeId`.
+   - Also call `setFrameRate(120f, FRAME_RATE_COMPATIBILITY_DEFAULT)` on the window's surface where available (API 30+).
+   - Verify while Fox is in front: *Developer options → Show refresh rate* should read 120, and so should this:
+
+     ```bash
+     adb shell dumpsys SurfaceFlinger | grep activeMode
+     ```
+
+   - If HyperOS still forces 60, write that down with the evidence and carry on. Don't fight the OS with hacks.
+2. **Draw the wallpaper once and move it, don't redraw it.**
+   - Each layer (back, clock, front) is drawn once at screen size into its own layer.
+   - Tilt and, later, the dashboard split only change `Modifier.graphicsLayer { translationX = …; translationY = … }`, with the state read **inside the lambda**. That way a tilt change never causes recomposition or a redraw; it only moves the layer.
+   - Clip the front layer with a `GenericShape` made once from the ridge path (`graphicsLayer { clip = true; shape = ridgeShape }`). Don't rebuild the `Path` per frame.
+   - Decode `wallpaper.webp` once, scaled to the box size from Phase 3, and keep it.
+3. **Calm the tilt.**
+   - Skip updates smaller than 0.002 after the 0.08 low-pass.
+   - Once the phone has been still for 1 s, stop updating until it moves again.
+   - Unregister the sensor in `onPause` and register it again in `onResume`.
+4. **Frame loops only while something moves.** Every `withFrameNanos` loop (springs, waves, ripples) must end when its springs settle, never run forever.
+5. **Test the speed with an optimised build, not debug.**
+   - Add a `benchmark` build type: copy of release, `isMinifyEnabled = true`, signed with the debug key, `isDebuggable = false`.
+   - Add `androidx.profileinstaller:profileinstaller`; this is the **one** new dependency allowed by this plan.
+   - Install with `./gradlew installBenchmark`.
+   - Keep debug builds for everyday work; judge speed only on `benchmark`.
+6. **The blur:** if the 4 px blur behind Ink surfaces costs frames on this phone, turn it off here (keep the 60% ink). Measure with and without it.
+7. **Measure and report.** On the `benchmark` build, reset the stats, then use the home screen for 10 s (tilt it, tap the words, press Continue), then dump them:
+
+   ```bash
+   adb shell dumpsys gfxinfo com.fox.mobile reset
+   ```
+
+   ```bash
+   adb shell dumpsys gfxinfo com.fox.mobile
+   ```
+
+   Put the numbers (refresh rate, 50th/90th/99th percentile, janky %) in the commit message.
+
+**Done when:**
+- the screen runs at 120 Hz while Fox is in front, or you've documented why HyperOS won't allow it
+- on the `benchmark` build, 90th percentile ≤ 8 ms at 120 Hz (≤ 16 ms if stuck at 60 Hz)
+- janky frames under 5%
+- the tilt stops costing anything when the phone lies still
+
+Re-run step 7 at the end of **every later phase**, and don't commit a phase that makes these numbers worse.
+
+---
+
 ## Phase 5: The Fox Line (the bar)
 
 Prototype reference: `LINE` (`idle`, `xfer` and the others), `wavyBar()`, `splashBar()`, `drop()`, `startHold()`, `openIsland()`, `renderIsland()`, `BEAD`, `lv`.
@@ -298,6 +355,8 @@ Fix anything that differs from the prototype at the phone's real size. Check eve
 ---
 
 ## Phase 10: Performance on the POCO C71
+
+The basics were already done in Phase 4.5. Here, re-check them with everything on screen.
 
 - Wallpaper: decode once at screen size, keep the bitmap, and reuse the ridge `Path`.
 - Redraw only what moves. Draw the bar in its own `Canvas` layer, and use `graphicsLayer` translations for the split rather than re-measuring.

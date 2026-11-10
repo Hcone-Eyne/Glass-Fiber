@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.fox.mobile.ui.depth.DepthWallpaperAndClock
+import com.fox.mobile.ui.home.Phase4HomeContent
 import com.fox.mobile.ui.theme.FoxTheme
 
 class MainActivity : ComponentActivity() {
@@ -26,7 +27,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             FoxTheme {
-                DepthWallpaperAndClock()
+                DepthWallpaperAndClock { wpBox ->
+                    Phase4HomeContent(box = wpBox)
+                }
             }
         }
     }

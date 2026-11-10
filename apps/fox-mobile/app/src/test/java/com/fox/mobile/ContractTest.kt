@@ -9,6 +9,10 @@ import com.fox.mobile.protocol.ReplayGuard
 import com.fox.mobile.ui.depth.RIDGE_NORMALIZED_POINTS
 import com.fox.mobile.ui.depth.TiltParallaxState
 import com.fox.mobile.ui.depth.WallpaperBox
+import com.fox.mobile.ui.home.SampleWordsRepository
+import com.fox.mobile.ui.home.WordsFitOption
+import com.fox.mobile.ui.home.maxRidgeYInSpan
+import com.fox.mobile.ui.home.selectWordsFit
 import com.fox.mobile.ui.theme.FoxColors
 import org.json.JSONArray
 import org.json.JSONObject
@@ -289,5 +293,103 @@ class ContractTest {
         assertEquals("tiltY must clamp to 0 when animations disabled", 0f, tiltState.tiltY, 0.0001f)
 
         println("  [PASS] testPhase3DepthWallpaperAndTiltMath: verified WallpaperBox geometry, 191 ridge points, and TiltParallaxState low-pass physics")
+    }
+
+    @Test
+    fun testPhase4WordsRepositoryAndRidgeFit() {
+        // 1. SampleWordsRepository.getWords() has size 3 matching the prototype
+        val words = SampleWordsRepository.getWords()
+        assertEquals("Words repository must have exactly 3 items matching prototype", 3, words.size)
+        assertEquals("Your verse", words[0].kind)
+        assertEquals("I can do all things through Christ which strengtheneth me.", words[0].text)
+        assertEquals("Philippians 4:13", words[0].attribution)
+
+        assertEquals("Saved quote", words[1].kind)
+        assertEquals("Stay hungry. Stay foolish.", words[1].text)
+        assertEquals("Steve Jobs", words[1].attribution)
+
+        assertEquals("Fox reminder", words[2].kind)
+        assertEquals("Revise unit 3 tonight. Your phone goes quiet at 1 AM.", words[2].text)
+        assertNull("Fox reminder has no attribution", words[2].attribution)
+
+        // 2. SampleWordsRepository.getInitialIndex() time-of-day mapping:
+        //    9 AM (< 12) -> 0 (Verse)
+        //    14 PM (< 18) -> 1 (Saved quote)
+        //    20 PM (>= 18) -> 2 (Fox reminder)
+        assertEquals(0, SampleWordsRepository.getInitialIndex(9))
+        assertEquals(1, SampleWordsRepository.getInitialIndex(14))
+        assertEquals(2, SampleWordsRepository.getInitialIndex(20))
+
+        // 3. formattedAttribution check:
+        //    index 0: "— Philippians 4:13 · Your verse"
+        //    index 1: "— Steve Jobs · Saved quote"
+        //    index 2: "Fox reminder"
+        assertEquals("— Philippians 4:13 · Your verse", words[0].formattedAttribution)
+        assertEquals("— Steve Jobs · Saved quote", words[1].formattedAttribution)
+        assertEquals("Fox reminder", words[2].formattedAttribution)
+
+        // 4. selectWordsFit on the POCO C71 (720 x 1640):
+        //    workTopPx = 0.54f * 1640f = 885.6f
+        //    gapAboveWorkPx = 14f * 2f = 28f
+        //    minClearanceBelowRidgePx = 10f * 2f = 20f
+        //    leftEdgePx = 22f * 2f = 44f
+        //    workBlockWidthPx = 720f - 2f * 44f = 632f
+        val screenWidth = 720f
+        val screenHeight = 1640f
+        val box = WallpaperBox.calculate(screenWidth, screenHeight)
+        val workTopPx = 0.54f * screenHeight
+        val gapAboveWorkPx = 14f * 2f
+        val minClearanceBelowRidgePx = 10f * 2f
+        val leftEdgePx = 22f * 2f
+        val workBlockWidthPx = screenWidth - 2f * leftEdgePx
+
+        assertEquals(885.6f, workTopPx, 0.01f)
+        assertEquals(28f, gapAboveWorkPx, 0.01f)
+        assertEquals(20f, minClearanceBelowRidgePx, 0.01f)
+
+        for ((index, item) in words.withIndex()) {
+            val measureHeightPx: (Float, Float) -> Float = { maxWidthPx, fontSizeSp ->
+                val fontSizePx = fontSizeSp * 2f
+                val lineHeightPx = fontSizePx * 1.3f
+                val avgCharWidth = fontSizePx * 0.52f
+                val charsPerLine = (maxWidthPx / avgCharWidth).toInt().coerceAtLeast(1)
+                val lineCount = (item.text.length + charsPerLine - 1) / charsPerLine
+                val textHeight = lineCount * lineHeightPx
+                val gap = 4f * 2f
+                val attributionHeight = 16f * 2f
+                textHeight + gap + attributionHeight
+            }
+
+            val fit: WordsFitOption = selectWordsFit(
+                workTopPx = workTopPx,
+                gapAboveWorkPx = gapAboveWorkPx,
+                minClearanceBelowRidgePx = minClearanceBelowRidgePx,
+                leftEdgePx = leftEdgePx,
+                workBlockWidthPx = workBlockWidthPx,
+                box = box,
+                measureHeightPx = measureHeightPx
+            )
+
+            assertNotNull("Fit candidate must not be null for word item $index", fit)
+            assertTrue("Selected width fraction must be in candidate range", fit.maxWidthFraction in listOf(0.68f, 0.80f, 0.92f))
+            assertTrue("Selected font size must be in candidate range", fit.fontSizeSp in listOf(14f, 15f, 16f))
+
+            val wordsWidthPx = workBlockWidthPx * fit.maxWidthFraction
+            val wordsHeightPx = measureHeightPx(wordsWidthPx, fit.fontSizeSp)
+            val wordsBottomPx = workTopPx - gapAboveWorkPx
+            val wordsTopPx = wordsBottomPx - wordsHeightPx
+            val maxRidgeY = maxRidgeYInSpan(leftEdgePx, leftEdgePx + wordsWidthPx, box)
+
+            assertTrue(
+                "Word $index '${item.kind}': wordsTopPx ($wordsTopPx) must be >= maxRidgeY ($maxRidgeY) + clearance ($minClearanceBelowRidgePx)",
+                wordsTopPx >= maxRidgeY + minClearanceBelowRidgePx
+            )
+            assertTrue(
+                "Word $index '${item.kind}': wordsBottomPx ($wordsBottomPx) must be <= workTopPx - gap (${workTopPx - gapAboveWorkPx}) to avoid work block overlap",
+                wordsBottomPx <= workTopPx - gapAboveWorkPx
+            )
+        }
+
+        println("  [PASS] testPhase4WordsRepositoryAndRidgeFit: verified 3 words items, time-of-day index, attributions, and mountain ridge clearance on POCO C71")
     }
 }

@@ -1,8 +1,19 @@
 package com.fox.mobile.ui.home
 
+import android.content.Intent
+import android.os.Build
+import android.provider.AlarmClock
+import android.provider.Settings
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -11,20 +22,48 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.fox.mobile.protocol.FoxStateSpec
 import com.fox.mobile.protocol.FoxTask
+import com.fox.mobile.ui.depth.WallpaperBox
 import com.fox.mobile.ui.drawer.SpotlightSheet
 import com.fox.mobile.ui.island.IslandCard
 import com.fox.mobile.ui.line.FoxLineBar
 import com.fox.mobile.ui.line.FoxLineMode
 import com.fox.mobile.ui.line.SecondaryBead
 import com.fox.mobile.ui.theme.FoxColors
+import com.fox.mobile.ui.theme.FoxFonts
+import com.fox.mobile.ui.theme.FoxMotion
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * Main Fox Launcher Home Surface (`Fox_Line_v30.html` architecture):
@@ -268,4 +307,401 @@ fun WorkHomeScreen(
             )
         }
     }
+}
+
+/**
+ * Phase 4: The home content (Work block, Continue button, Next alarm row, and Ridge-fitted Words line).
+ *
+ * Rendered on top of [com.fox.mobile.ui.depth.DepthWallpaperAndClock] in MainActivity.
+ *
+ * Specs from docs/FOX_MOBILE_PLAN.md (lines 149-166) & docs/prototypes/Fox_Line_v30.html:
+ * 1. Work block at left/right 22dp, top 54% of H:
+ *    - Sentence "You were writing MenuBarView.swift on your Mac, 4 min ago." (Bricolage 23sp, t2, file name in t1 SemiBold)
+ *    - Continue button: 52dp tall, pill shape (26dp radius), inkSurface (60%), 1dp hair border, Bricolage 16sp SemiBold + 18dp right arrow
+ *    - .next row: "Exam tomorrow 9:30 · no alarm" + "Set 7:00" chip -> tapping sets AlarmClock intent & changes to "Alarm 7:00" (ok green)
+ * 2. Words line 14dp above work block (bottom at 54% of H - 14dp, left 22dp):
+ *    - Time-of-day initial word item from SampleWordsRepository
+ *    - selectWordsFit(...) dynamically fits quote under the lowest mountain ridge point
+ *    - Tapping animates 200ms alpha fade + 4dp blur (or immediate if ANIMATOR_DURATION_SCALE == 0f) and advances to next word
+ */
+@Composable
+fun Phase4HomeContent(
+    box: WallpaperBox,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val density = LocalDensity.current
+    val coroutineScope = rememberCoroutineScope()
+    val textMeasurer = rememberTextMeasurer()
+
+    // Words state
+    var wordIndex by remember { mutableIntStateOf(SampleWordsRepository.getInitialIndex()) }
+    val currentWord = SampleWordsRepository.getWordAt(wordIndex)
+    val swapAlpha = remember { Animatable(1f) }
+    var isSwapping by remember { mutableStateOf(false) }
+
+    val animScale = remember(context) {
+        runCatching {
+            Settings.Global.getFloat(
+                context.contentResolver,
+                Settings.Global.ANIMATOR_DURATION_SCALE,
+                1f
+            )
+        }.getOrDefault(1f)
+    }
+
+    // Continue button state
+    var continueText by remember { mutableStateOf("Continue") }
+    val continueInteractionSource = remember { MutableInteractionSource() }
+    val isContinuePressed by continueInteractionSource.collectIsPressedAsState()
+    val continueScale by animateFloatAsState(
+        targetValue = if (isContinuePressed) FoxMotion.PressScale else 1f,
+        animationSpec = tween(durationMillis = 100),
+        label = "continueScale"
+    )
+
+    // Alarm row state
+    var alarmSet by remember { mutableStateOf(false) }
+
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize()
+    ) {
+        val screenW = with(density) { maxWidth.toPx() }
+        val screenH = with(density) { maxHeight.toPx() }
+
+        if (screenW <= 0f || screenH <= 0f) return@BoxWithConstraints
+
+        val leftEdgeDp = 22.dp
+        val leftEdgePx = with(density) { leftEdgeDp.toPx() }
+        val workBlockWidthPx = screenW - 2f * leftEdgePx
+
+        // Calculate ridge fit for words line
+        val fit = remember(currentWord, screenW, screenH, box) {
+            selectWordsFit(
+                workTopPx = screenH * 0.54f,
+                gapAboveWorkPx = with(density) { 14.dp.toPx() },
+                minClearanceBelowRidgePx = with(density) { 10.dp.toPx() },
+                leftEdgePx = leftEdgePx,
+                workBlockWidthPx = workBlockWidthPx,
+                box = box
+            ) { maxWidthPx, fontSizeSp ->
+                val quoteResult = textMeasurer.measure(
+                    text = AnnotatedString(currentWord.text),
+                    style = TextStyle(
+                        fontFamily = FoxFonts.Bricolage,
+                        fontSize = fontSizeSp.sp,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = (fontSizeSp * 1.35f).sp,
+                        letterSpacing = (-0.01).em
+                    ),
+                    constraints = Constraints(maxWidth = maxWidthPx.roundToInt().coerceAtLeast(1))
+                )
+                val attrText = currentWord.formattedAttribution
+                val attrHeight = if (attrText.isNotEmpty()) {
+                    val attrResult = textMeasurer.measure(
+                        text = AnnotatedString(attrText),
+                        style = TextStyle(
+                            fontFamily = FoxFonts.Figtree,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        constraints = Constraints(maxWidth = maxWidthPx.roundToInt().coerceAtLeast(1))
+                    )
+                    with(density) { 4.dp.toPx() } + attrResult.size.height
+                } else {
+                    0f
+                }
+                quoteResult.size.height + attrHeight
+            }
+        }
+
+        val onWordsTap: () -> Unit = {
+            if (!isSwapping) {
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                if (animScale == 0f) {
+                    val (nextIdx, _) = SampleWordsRepository.getNextWord(wordIndex)
+                    wordIndex = nextIdx
+                } else {
+                    coroutineScope.launch {
+                        isSwapping = true
+                        swapAlpha.animateTo(
+                            targetValue = 0f,
+                            animationSpec = tween(durationMillis = 200, easing = FoxMotion.EnterEasing)
+                        )
+                        val (nextIdx, _) = SampleWordsRepository.getNextWord(wordIndex)
+                        wordIndex = nextIdx
+                        swapAlpha.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 200, easing = FoxMotion.EnterEasing)
+                        )
+                        isSwapping = false
+                    }
+                }
+            }
+        }
+
+        Layout(
+            content = {
+                // [0] Words line block
+                val blurDp = ((1f - swapAlpha.value) * 4f).dp
+                Column(
+                    modifier = Modifier
+                        .semantics { contentDescription = currentWord.contentDescription }
+                        .graphicsLayer {
+                            alpha = swapAlpha.value
+                        }
+                        .then(
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && blurDp > 0.dp) {
+                                Modifier.blur(blurDp)
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            onWordsTap()
+                        }
+                ) {
+                    // Quote text
+                    Text(
+                        text = currentWord.text,
+                        fontFamily = FoxFonts.Bricolage,
+                        fontSize = fit.fontSizeSp.sp,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = (fit.fontSizeSp * 1.35f).sp,
+                        letterSpacing = (-0.01).em,
+                        color = FoxColors.t1,
+                        style = TextStyle(
+                            shadow = Shadow(
+                                color = Color(0xBF000000), // black at 75%
+                                offset = Offset(0f, 1f),
+                                blurRadius = 10f
+                            )
+                        )
+                    )
+
+                    // Attribution line (4.dp below quote)
+                    if (currentWord.formattedAttribution.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = currentWord.formattedAttribution,
+                            fontFamily = FoxFonts.Figtree,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = FoxColors.t2,
+                            style = TextStyle(
+                                shadow = Shadow(
+                                    color = Color(0xBF000000),
+                                    offset = Offset(0f, 1f),
+                                    blurRadius = 10f
+                                )
+                            )
+                        )
+                    }
+                }
+
+                // [1] Work block
+                Column {
+                    // Work sentence with "MenuBarView.swift" highlighted in t1 SemiBold (650)
+                    val sentence = remember {
+                        buildAnnotatedString {
+                            withStyle(
+                                SpanStyle(
+                                    color = FoxColors.t2,
+                                    fontFamily = FoxFonts.Bricolage,
+                                    fontSize = 23.sp,
+                                    letterSpacing = (-0.015).em
+                                )
+                            ) {
+                                append("You were writing ")
+                                withStyle(
+                                    SpanStyle(
+                                        color = FoxColors.t1,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                ) {
+                                    append("MenuBarView.swift")
+                                }
+                                append(" on your Mac, 4 min ago.")
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = sentence,
+                        fontFamily = FoxFonts.Bricolage,
+                        fontSize = 23.sp,
+                        lineHeight = (23 * 1.22).sp,
+                        letterSpacing = (-0.015).em,
+                        style = TextStyle(
+                            shadow = Shadow(
+                                color = Color(0xBF000000),
+                                offset = Offset(0f, 1f),
+                                blurRadius = 10f
+                            )
+                        )
+                    )
+
+                    // 14.dp below sentence: Continue button
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = continueScale
+                                scaleY = continueScale
+                            }
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(26.dp))
+                            .background(FoxColors.inkSurface)
+                            .border(1.dp, FoxColors.hair, RoundedCornerShape(26.dp))
+                            .clickable(
+                                interactionSource = continueInteractionSource,
+                                indication = null
+                            ) {
+                                if (continueText == "Continue") {
+                                    coroutineScope.launch {
+                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        continueText = "Sending to your Mac"
+                                        delay(1100L)
+                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                        continueText = "Open on your Mac"
+                                        delay(2200L)
+                                        continueText = "Continue"
+                                    }
+                                }
+                            }
+                            .padding(horizontal = 22.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = continueText,
+                                fontFamily = FoxFonts.Bricolage,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = FoxColors.t1
+                            )
+                            // Right arrow Canvas icon 18.dp
+                            Canvas(modifier = Modifier.size(18.dp)) {
+                                val w = size.width
+                                val h = size.height
+                                val strokeWidth = 1.8f * (w / 24f)
+                                val stroke = Stroke(
+                                    width = strokeWidth,
+                                    cap = StrokeCap.Round,
+                                    join = StrokeJoin.Round
+                                )
+                                drawLine(
+                                    color = FoxColors.t1,
+                                    start = Offset(5f / 24f * w, h * 0.5f),
+                                    end = Offset(19f / 24f * w, h * 0.5f),
+                                    strokeWidth = stroke.width,
+                                    cap = stroke.cap
+                                )
+                                val chevronPath = Path().apply {
+                                    moveTo(13f / 24f * w, 6f / 24f * h)
+                                    lineTo(19f / 24f * w, 12f / 24f * h)
+                                    lineTo(13f / 24f * w, 18f / 24f * h)
+                                }
+                                drawPath(
+                                    path = chevronPath,
+                                    color = FoxColors.t1,
+                                    style = stroke
+                                )
+                            }
+                        }
+                    }
+
+                    // 12.dp below Continue button: .next row
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = if (alarmSet) "Exam tomorrow 9:30" else "Exam tomorrow 9:30 · no alarm",
+                            fontFamily = FoxFonts.Figtree,
+                            fontSize = 13.sp,
+                            color = FoxColors.t2,
+                            style = TextStyle(
+                                shadow = Shadow(
+                                    color = Color(0xBF000000),
+                                    offset = Offset(0f, 1f),
+                                    blurRadius = 8f
+                                )
+                            )
+                        )
+
+                        // Alarm chip
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(if (alarmSet) Color(0x247FD6A4) else Color(0x29F2B33D))
+                                .clickable(enabled = !alarmSet) {
+                                    alarmSet = true
+                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    val intent = Intent(AlarmClock.ACTION_SET_ALARM).apply {
+                                        putExtra(AlarmClock.EXTRA_HOUR, 7)
+                                        putExtra(AlarmClock.EXTRA_MINUTES, 0)
+                                        putExtra(AlarmClock.EXTRA_MESSAGE, "Exam tomorrow 9:30")
+                                        putExtra(AlarmClock.EXTRA_SKIP_UI, true)
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    runCatching { context.startActivity(intent) }
+                                }
+                                .padding(horizontal = 10.dp, vertical = 5.dp)
+                        ) {
+                            Text(
+                                text = if (alarmSet) "Alarm 7:00" else "Set 7:00",
+                                fontFamily = FoxFonts.Figtree,
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (alarmSet) FoxColors.ok else FoxColors.ember
+                            )
+                        }
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        ) { measurables, constraints ->
+            val leftPaddingPx = 22.dp.roundToPx()
+            val availableWidthPx = constraints.maxWidth - leftPaddingPx * 2
+
+            // Measure Work block
+            val workPlaceable = measurables[1].measure(
+                Constraints(minWidth = availableWidthPx, maxWidth = availableWidthPx)
+            )
+
+            // Measure Words block with maxWidthFraction
+            val wordsMaxWidthPx = (availableWidthPx * fit.maxWidthFraction).roundToInt().coerceAtLeast(1)
+            val wordsPlaceable = measurables[0].measure(
+                Constraints(minWidth = 0, maxWidth = wordsMaxWidthPx)
+            )
+
+            val workTopY = (constraints.maxHeight * 0.54f).roundToInt()
+            val gapPx = 14.dp.roundToPx()
+            val wordsTopY = workTopY - gapPx - wordsPlaceable.height
+
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                wordsPlaceable.place(x = leftPaddingPx, y = wordsTopY)
+                workPlaceable.place(x = leftPaddingPx, y = workTopY)
+            }
+        }
+    }
+}
+
+@Composable
+fun WorkHomeScreen(
+    box: WallpaperBox,
+    modifier: Modifier = Modifier
+) {
+    Phase4HomeContent(box = box, modifier = modifier)
 }
