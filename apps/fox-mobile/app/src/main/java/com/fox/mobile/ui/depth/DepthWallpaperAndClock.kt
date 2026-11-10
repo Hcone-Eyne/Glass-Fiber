@@ -600,6 +600,7 @@ fun DepthWallpaperAndClock(
     fontBody: FontFamily = FoxFonts.Figtree,
     tiltState: TiltParallaxState = rememberTiltParallaxState(),
     dashProgressProvider: () -> Float = { 0f },
+    dashboardContent: @Composable BoxScope.() -> Unit = {},
     onClockLongPress: (() -> Unit)? = null,
     overlayContent: @Composable BoxScope.(WallpaperBox) -> Unit = {}
 ) {
@@ -701,6 +702,10 @@ fun DepthWallpaperAndClock(
             }
         }
 
+        // Dashboard sits between the two wallpaper planes. As the planes part, the
+        // cards become visible in the opening and remain masked by the clock/ridge.
+        dashboardContent()
+
         // -------------------------------------------------------------
         // LAYER 2: CLOCK & DATE (Tucked behind the ridge)
         // Position: left 22dp, top 24.5% of H. Cached offscreen & moved on the GPU.
@@ -725,7 +730,9 @@ fun DepthWallpaperAndClock(
                     val p = dashProgressProvider()
                     compositingStrategy = CompositingStrategy.Offscreen
                     translationX = tiltState.tiltX * 10f
-                    translationY = tiltState.tiltY * 8f - 0.20f * screenH * p
+                    // A small extra lift keeps the clock baseline clear of the
+                    // dashboard's Mac status row on edge-to-edge Android screens.
+                    translationY = tiltState.tiltY * 8f - 0.225f * screenH * p
                 }
         ) {
             // Date: Figtree 14sp, 600, t2 color (F6F0E6 68%), shadow 0 1px 8px rgba(0,0,0,.6), margin-left 6dp

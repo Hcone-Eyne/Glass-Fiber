@@ -55,6 +55,7 @@ import com.fox.mobile.protocol.FoxStateSpec
 import com.fox.mobile.protocol.FoxTask
 import com.fox.mobile.ui.depth.WallpaperBox
 import com.fox.mobile.ui.drawer.SpotlightSheet
+import com.fox.mobile.ui.drawer.FoxContact
 import com.fox.mobile.ui.island.IslandCard
 import com.fox.mobile.ui.line.FoxLineBar
 import com.fox.mobile.ui.line.FoxLineMode
