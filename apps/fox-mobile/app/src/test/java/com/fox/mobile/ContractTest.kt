@@ -13,6 +13,9 @@ import com.fox.mobile.ui.home.SampleWordsRepository
 import com.fox.mobile.ui.home.WordsFitOption
 import com.fox.mobile.ui.home.maxRidgeYInSpan
 import com.fox.mobile.ui.home.selectWordsFit
+import com.fox.mobile.ui.line.FoxActivityType
+import com.fox.mobile.ui.line.FoxLineState
+import com.fox.mobile.ui.line.FoxOrderState
 import com.fox.mobile.ui.theme.FoxColors
 import org.json.JSONArray
 import org.json.JSONObject
@@ -517,5 +520,109 @@ class ContractTest {
         assertEquals("Channel velocity must be 0f once settled", 0f, channel.velocity, 0.0001f)
 
         println("  [PASS] testPhase4_5CalmTiltAndSpringSettle: verified calm tilt deadband (<0.002f) and spring 120Hz settle (<1.5s)")
+    }
+
+    @Test
+    fun testPhase5FoxLineMathAndUrgencyQueue() {
+        // -------------------------------------------------------------
+        // 1. FoxLineState urgency queue (activeList):
+        // -------------------------------------------------------------
+        val state = FoxLineState()
+
+        // 1a. When idle, activeList() is empty
+        assertTrue("activeList() must be empty when idle", state.activeList().isEmpty())
+
+        // 1b. When startMusic() and startOrder() are called, activeList() returns [ORDER, MUSIC]
+        // (order is more urgent than music)
+        state.startMusic()
+        state.startOrder()
+        assertEquals(
+            "When startMusic() and startOrder() are called, activeList() returns [ORDER, MUSIC]",
+            listOf(FoxActivityType.ORDER, FoxActivityType.MUSIC),
+            state.activeList()
+        )
+
+        // 1c. When swapped = true, activeList() swaps them to [MUSIC, ORDER]
+        state.swapped = true
+        assertEquals(
+            "When swapped = true, activeList() swaps them to [MUSIC, ORDER]",
+            listOf(FoxActivityType.MUSIC, FoxActivityType.ORDER),
+            state.activeList()
+        )
+
+        // 1d. When triggerMessage() is called, MSG takes priority ahead of ORDER ([MSG, ORDER], capped at max 2 items)
+        state.swapped = false
+        state.triggerMessage()
+        assertEquals(
+            "When triggerMessage() is called, MSG takes priority ahead of ORDER ([MSG, ORDER], capped at max 2 items)",
+            listOf(FoxActivityType.MSG, FoxActivityType.ORDER),
+            state.activeList()
+        )
+
+        // 1e. When startTimer(seconds = 5f) (urgent <= 10s or done = true) is active,
+        // TIMER is at index 0 ([TIMER, MSG]), and when timer.done == true, swapped = true does NOT demote the finished red timer from index 0!
+        state.startTimer(seconds = 5f)
+        assertEquals(
+            "When startTimer(seconds = 5f) is active, TIMER is at index 0 ([TIMER, MSG])",
+            listOf(FoxActivityType.TIMER, FoxActivityType.MSG),
+            state.activeList()
+        )
+
+        state.timer = state.timer?.copy(done = true)
+        state.swapped = true
+        assertEquals(
+            "When timer.done == true, swapped = true does NOT demote the finished red timer from index 0",
+            listOf(FoxActivityType.TIMER, FoxActivityType.MSG),
+            state.activeList()
+        )
+
+        // -------------------------------------------------------------
+        // 2. orderStage() math:
+        // -------------------------------------------------------------
+        state.clearAll()
+        val t0 = 100f
+        state.order = FoxOrderState(t0Sec = t0)
+
+        // At t = t0 + 2s (p = 0.05), label is "Preparing"
+        val stage2s = state.orderStage(now = t0 + 2f)
+        assertNotNull("stage2s must not be null", stage2s)
+        assertEquals("Progress at 2s must be 0.05f", 0.05f, stage2s!!.progress, 0.001f)
+        assertEquals("Label at 2s must be 'Preparing'", "Preparing", stage2s.label)
+        assertFalse("Delivered must be false at 2s", stage2s.delivered)
+
+        // At t = t0 + 20s (p = 0.50), label is "On the way"
+        val stage20s = state.orderStage(now = t0 + 20f)
+        assertNotNull("stage20s must not be null", stage20s)
+        assertEquals("Progress at 20s must be 0.50f", 0.50f, stage20s!!.progress, 0.001f)
+        assertEquals("Label at 20s must be 'On the way'", "On the way", stage20s.label)
+        assertFalse("Delivered must be false at 20s", stage20s.delivered)
+
+        // At t = t0 + 36s (p = 0.90), label is "Arriving"
+        val stage36s = state.orderStage(now = t0 + 36f)
+        assertNotNull("stage36s must not be null", stage36s)
+        assertEquals("Progress at 36s must be 0.90f", 0.90f, stage36s!!.progress, 0.001f)
+        assertEquals("Label at 36s must be 'Arriving'", "Arriving", stage36s.label)
+        assertFalse("Delivered must be false at 36s", stage36s.delivered)
+
+        // At t = t0 + 40s (p = 1.00), label is "Delivered" and delivered == true and etaMinutes == 0
+        val stage40s = state.orderStage(now = t0 + 40f)
+        assertNotNull("stage40s must not be null", stage40s)
+        assertEquals("Progress at 40s must be 1.00f", 1.00f, stage40s!!.progress, 0.001f)
+        assertEquals("Label at 40s must be 'Delivered'", "Delivered", stage40s.label)
+        assertTrue("Delivered must be true at 40s", stage40s.delivered)
+        assertEquals("etaMinutes must be 0 at 40s", 0, stage40s.etaMinutes)
+
+        // -------------------------------------------------------------
+        // 3. splashBar(1f) decaying wave math:
+        // -------------------------------------------------------------
+        state.clearAll()
+        state.splashBar(1f)
+        assertEquals("Immediately after splashBar(1f), splashAmp is 3.2f", 3.2f, state.splashAmp, 0.0001f)
+        val initialWaveAmp = state.splashAmp * kotlin.math.exp(-0f * 3.6f)
+        assertEquals("Decaying wave amplitude at age 0s is 3.2f", 3.2f, initialWaveAmp, 0.0001f)
+        assertTrue("isSplashActive immediately after splashBar(1f) is true", state.isSplashActive(now = state.splashT0Sec))
+        assertFalse("isSplashActive after 1.2s is false", state.isSplashActive(now = state.splashT0Sec + 1.2f))
+
+        println("  [PASS] testPhase5FoxLineMathAndUrgencyQueue: verified urgency queue, order stages, and splash wave math")
     }
 }

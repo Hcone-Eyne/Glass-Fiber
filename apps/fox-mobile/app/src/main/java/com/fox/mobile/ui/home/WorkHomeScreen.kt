@@ -58,6 +58,7 @@ import com.fox.mobile.ui.drawer.SpotlightSheet
 import com.fox.mobile.ui.island.IslandCard
 import com.fox.mobile.ui.line.FoxLineBar
 import com.fox.mobile.ui.line.FoxLineMode
+import com.fox.mobile.ui.line.FoxLineState
 import com.fox.mobile.ui.line.SecondaryBead
 import com.fox.mobile.ui.theme.FoxColors
 import com.fox.mobile.ui.theme.FoxFonts
@@ -328,6 +329,7 @@ fun WorkHomeScreen(
 @Composable
 fun Phase4HomeContent(
     box: WallpaperBox,
+    foxLineState: FoxLineState? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -539,11 +541,11 @@ fun Phase4HomeContent(
 
                     // 14.dp below sentence: Continue button (isolated recomposition scope)
                     Spacer(modifier = Modifier.height(14.dp))
-                    ContinueActionPill()
+                    ContinueActionPill(foxLineState = foxLineState)
 
                     // 12.dp below Continue button: .next row (isolated recomposition scope)
                     Spacer(modifier = Modifier.height(12.dp))
-                    NextAlarmRow()
+                    NextAlarmRow(foxLineState = foxLineState)
                 }
             },
             modifier = Modifier.fillMaxSize()
@@ -580,7 +582,7 @@ fun Phase4HomeContent(
 }
 
 @Composable
-private fun ContinueActionPill() {
+private fun ContinueActionPill(foxLineState: FoxLineState? = null) {
     val view = LocalView.current
     val coroutineScope = rememberCoroutineScope()
     var continueText by remember { mutableStateOf("Continue") }
@@ -591,6 +593,17 @@ private fun ContinueActionPill() {
         animationSpec = tween(durationMillis = 100),
         label = "continueScale"
     )
+
+    LaunchedEffect(foxLineState?.contT0Sec) {
+        if (foxLineState?.contT0Sec != null && continueText == "Continue") {
+            continueText = "Sending to your Mac"
+            delay(1100L)
+            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+            continueText = "Open on your Mac"
+            delay(2200L)
+            continueText = "Continue"
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -607,8 +620,9 @@ private fun ContinueActionPill() {
                 indication = null
             ) {
                 if (continueText == "Continue") {
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    foxLineState?.triggerContinue()
                     coroutineScope.launch {
-                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                         continueText = "Sending to your Mac"
                         delay(1100L)
                         view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
@@ -664,10 +678,11 @@ private fun ContinueActionPill() {
 }
 
 @Composable
-private fun NextAlarmRow() {
+private fun NextAlarmRow(foxLineState: FoxLineState? = null) {
     val context = LocalContext.current
     val view = LocalView.current
-    var alarmSet by remember { mutableStateOf(false) }
+    var localAlarmSet by remember { mutableStateOf(false) }
+    val alarmSet = localAlarmSet || (foxLineState?.alarmSet == true)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -692,7 +707,8 @@ private fun NextAlarmRow() {
                 .clip(RoundedCornerShape(999.dp))
                 .background(if (alarmSet) Color(0x247FD6A4) else Color(0x29F2B33D))
                 .clickable(enabled = !alarmSet) {
-                    alarmSet = true
+                    localAlarmSet = true
+                    foxLineState?.alarmSet = true
                     view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     val intent = Intent(AlarmClock.ACTION_SET_ALARM).apply {
                         putExtra(AlarmClock.EXTRA_HOUR, 7)

@@ -9,7 +9,10 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.provider.Settings
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -589,6 +592,7 @@ fun rememberWallpaperBitmap(): ImageBitmap? {
 /**
  * Main Depth Wallpaper & Clock Composable (Phase 3 & Phase 4.5 Speed).
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DepthWallpaperAndClock(
     modifier: Modifier = Modifier,
@@ -596,6 +600,7 @@ fun DepthWallpaperAndClock(
     fontBody: FontFamily = FoxFonts.Figtree,
     tiltState: TiltParallaxState = rememberTiltParallaxState(),
     dashProgressProvider: () -> Float = { 0f },
+    onClockLongPress: (() -> Unit)? = null,
     overlayContent: @Composable BoxScope.(WallpaperBox) -> Unit = {}
 ) {
     val density = LocalDensity.current
@@ -704,6 +709,18 @@ fun DepthWallpaperAndClock(
         Column(
             modifier = Modifier
                 .padding(start = 22.dp, top = clockTopDp)
+                .then(
+                    if (onClockLongPress != null) {
+                        Modifier.combinedClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {},
+                            onLongClick = { onClockLongPress() }
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
                 .graphicsLayer {
                     val p = dashProgressProvider()
                     compositingStrategy = CompositingStrategy.Offscreen
