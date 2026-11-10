@@ -6,6 +6,9 @@ import com.fox.mobile.core.Spring1D
 import com.fox.mobile.core.SpringChannelSet
 import com.fox.mobile.protocol.FoxSchemaValidator
 import com.fox.mobile.protocol.ReplayGuard
+import com.fox.mobile.ui.depth.RIDGE_NORMALIZED_POINTS
+import com.fox.mobile.ui.depth.TiltParallaxState
+import com.fox.mobile.ui.depth.WallpaperBox
 import com.fox.mobile.ui.theme.FoxColors
 import org.json.JSONArray
 import org.json.JSONObject
@@ -215,5 +218,76 @@ class ContractTest {
             assertTrue("Font file $name must be non-empty (size: ${file.length()})", file.length() > 0L)
         }
         println("  [PASS] testPhase2ColorAndMotionTokens: verified all Phase 2 color tokens & OFL fonts")
+    }
+
+    private fun resolveRidgeJsonFile(): File {
+        var dir = File(System.getProperty("user.dir") ?: ".").canonicalFile
+        repeat(5) {
+            val candidate = File(dir, "docs/prototypes/assets/ridge.json")
+            if (candidate.exists()) return candidate
+            dir = dir.parentFile ?: return@repeat
+        }
+        return File("docs/prototypes/assets/ridge.json")
+    }
+
+    @Test
+    fun testPhase3DepthWallpaperAndTiltMath() {
+        // 1. WallpaperBox.calculate(720f, 1640f) (for the POCO C71 720x1640 screen)
+        val box = WallpaperBox.calculate(720f, 1640f)
+        assertEquals("ih must equal 1.1f * 1640f", 1804f, box.ih, 0.01f)
+        assertEquals("iw must equal ih * 1136f / 615f", 3332.2666f, box.iw, 0.1f)
+        assertEquals("left must equal -(420f / 1136f) * iw", -1232f, box.left, 0.1f)
+        assertEquals("top must equal -0.05f * 1640f", -82f, box.top, 0.01f)
+
+        // 2. RIDGE_NORMALIZED_POINTS in com.fox.mobile.ui.depth has 191 points matching docs/prototypes/assets/ridge.json
+        val ridgeFile = resolveRidgeJsonFile()
+        assertTrue("ridge.json must exist at ${ridgeFile.absolutePath}", ridgeFile.exists())
+        val ridgeJson = JSONObject(ridgeFile.readText())
+        val ridgeArr = ridgeJson.getJSONArray("ridge")
+        assertEquals("ridge.json must contain 191 points", 191, ridgeArr.length())
+        assertEquals("RIDGE_NORMALIZED_POINTS must have 191 points", 191, RIDGE_NORMALIZED_POINTS.size)
+
+        for (i in 0 until 191) {
+            val pt = ridgeArr.getJSONArray(i)
+            val expectedX = pt.getDouble(0).toFloat()
+            val expectedY = pt.getDouble(1).toFloat()
+            assertEquals("Point $i x coordinate must match ridge.json", expectedX, RIDGE_NORMALIZED_POINTS[i].x, 0.0001f)
+            assertEquals("Point $i y coordinate must match ridge.json", expectedY, RIDGE_NORMALIZED_POINTS[i].y, 0.0001f)
+        }
+
+        // 3. TiltParallaxState low-pass 0.08f per frame updates tiltX and tiltY smoothly toward targetX and targetY
+        val tiltState = TiltParallaxState(animationsEnabled = true)
+        assertEquals(0f, tiltState.tiltX, 0.0001f)
+        assertEquals(0f, tiltState.tiltY, 0.0001f)
+
+        tiltState.targetX = 1.0f
+        tiltState.targetY = -0.5f
+
+        // Frame 1: tilt += (tgt - tilt) * 0.08f
+        tiltState.updateLowPass(hasSensor = true, timeSec = 0f)
+        assertEquals("Frame 1 tiltX should advance by 0.08 * (1.0 - 0)", 0.08f, tiltState.tiltX, 0.001f)
+        assertEquals("Frame 1 tiltY should advance by 0.08 * (-0.5 - 0)", -0.04f, tiltState.tiltY, 0.001f)
+
+        // Frame 2:
+        tiltState.updateLowPass(hasSensor = true, timeSec = 0f)
+        val expectedX2 = 0.08f + (1.0f - 0.08f) * 0.08f // 0.1536f
+        val expectedY2 = -0.04f + (-0.5f - (-0.04f)) * 0.08f // -0.0768f
+        assertEquals("Frame 2 tiltX", expectedX2, tiltState.tiltX, 0.001f)
+        assertEquals("Frame 2 tiltY", expectedY2, tiltState.tiltY, 0.001f)
+
+        // Convergence after 60 frames
+        repeat(60) {
+            tiltState.updateLowPass(hasSensor = true, timeSec = 0f)
+        }
+        assertTrue("tiltX should smoothly approach target 1.0f, got ${tiltState.tiltX}", tiltState.tiltX > 0.99f)
+        assertTrue("tiltY should smoothly approach target -0.5f, got ${tiltState.tiltY}", tiltState.tiltY < -0.49f)
+
+        // Respect animationsEnabled = false (e.g. reduced motion or zero duration scale)
+        tiltState.animationsEnabled = false
+        tiltState.updateLowPass(hasSensor = true, timeSec = 0f)
+        assertEquals("tiltX must clamp to 0 when animations disabled", 0f, tiltState.tiltX, 0.0001f)
+        assertEquals("tiltY must clamp to 0 when animations disabled", 0f, tiltState.tiltY, 0.0001f)
+
+        println("  [PASS] testPhase3DepthWallpaperAndTiltMath: verified WallpaperBox geometry, 191 ridge points, and TiltParallaxState low-pass physics")
     }
 }
