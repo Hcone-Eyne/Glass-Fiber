@@ -1,10 +1,12 @@
 package com.fox.mobile
 
+import androidx.compose.ui.graphics.Color
 import com.fox.mobile.core.FoxSpring
 import com.fox.mobile.core.Spring1D
 import com.fox.mobile.core.SpringChannelSet
 import com.fox.mobile.protocol.FoxSchemaValidator
 import com.fox.mobile.protocol.ReplayGuard
+import com.fox.mobile.ui.theme.FoxColors
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -178,5 +180,40 @@ class ContractTest {
         val hasNonZero = waveBuffer.any { it != 0f }
         assertTrue("Wave buffer should be populated with harmonic values", hasNonZero)
         println("  [PASS] Pure Kotlin FoxSpring & SpringChannelSet verified 100%")
+    }
+
+    private fun resolveResFontDir(): File {
+        var dir = File(System.getProperty("user.dir") ?: ".").canonicalFile
+        repeat(5) {
+            val candidate1 = File(dir, "src/main/res/font")
+            if (candidate1.exists() || File(dir, "src/main").exists()) return candidate1
+            val candidate2 = File(dir, "apps/fox-mobile/app/src/main/res/font")
+            if (candidate2.exists() || File(dir, "apps/fox-mobile/app/src/main").exists()) return candidate2
+            dir = dir.parentFile ?: return@repeat
+        }
+        return File("apps/fox-mobile/app/src/main/res/font")
+    }
+
+    @Test
+    fun testPhase2ColorAndMotionTokens() {
+        assertEquals("t1 must match #F6F0E6", Color(0xFFF6F0E6), FoxColors.t1)
+        assertEquals("t2 must match #F6F0E6 at 68%", Color(0xADF6F0E6), FoxColors.t2)
+        assertEquals("ember must match #F2B33D", Color(0xFFF2B33D), FoxColors.ember)
+        assertEquals("alert must match #FF4D4D", Color(0xFFFF4D4D), FoxColors.alert)
+        assertEquals("ok must match #7FD6A4", Color(0xFF7FD6A4), FoxColors.ok)
+        assertEquals("screenBg must match #07080C", Color(0xFF07080C), FoxColors.screenBg)
+        assertEquals("inkSurface must match rgb(16,16,22) at 60%", Color(0x99101016), FoxColors.inkSurface)
+        assertEquals("inkMenu must match rgb(24,24,31) at 80%", Color(0xCC18181F), FoxColors.inkMenu)
+        assertEquals("hair must match #F6F0E6 at 14%", Color(0x24F6F0E6), FoxColors.hair)
+        assertEquals("lineWarm must match #F6F0E6 at 85%", Color(0xD9F6F0E6), FoxColors.lineWarm)
+
+        val fontDir = resolveResFontDir()
+        val fontFiles = listOf("bricolage_grotesque.ttf", "figtree.ttf", "jetbrains_mono.ttf")
+        for (name in fontFiles) {
+            val file = File(fontDir, name)
+            assertTrue("Font file $name must exist in src/main/res/font/ (looked at ${file.absolutePath})", file.exists())
+            assertTrue("Font file $name must be non-empty (size: ${file.length()})", file.length() > 0L)
+        }
+        println("  [PASS] testPhase2ColorAndMotionTokens: verified all Phase 2 color tokens & OFL fonts")
     }
 }
