@@ -17,7 +17,14 @@ tags:
 
 ## Vault Navigation (`[[WikiLinks]]`)
 
+- **Main AI & Developer Brain (Start Here):** [[../../PROGRESS|PROGRESS.md]]
 - **Interactive Visual Canvas Map:** [[Fox_Mobile_Map.canvas]] *(Open in Obsidian to view the node-and-edge board)*
+- **Complete File-by-File Map (All 42 Repo Files):** [[files/File_Map_Index|File_Map_Index]]
+  - [[files/Fox_Mobile_App_And_Core|Fox_Mobile_App_And_Core]] (`MainActivity.kt`, `FoxSpring.kt`, `FoxTheme.kt`, Gradle)
+  - [[files/Fox_Mobile_Depth_And_Home|Fox_Mobile_Depth_And_Home]] (`DepthWallpaperAndClock.kt`, `WordsRepository.kt`, `WorkHomeScreen.kt`)
+  - [[files/Fox_Mobile_Line_And_Island|Fox_Mobile_Line_And_Island]] (`FoxLineState.kt`, `FoxLineCanvas.kt`, `IslandCard.kt`, `FoxLineDebugMenu.kt`)
+  - [[files/Fox_Mobile_Pending_Phase6_To_13|Fox_Mobile_Pending_Phase6_To_13]] (`SpotlightSheet.kt` **[LEGACY]**, `FoxProtocol.kt`, `FoxLinkClient.kt`, `fox-desk`)
+  - [[files/Prototype_Source_Of_Truth|Prototype_Source_Of_Truth]] (Exact line-number index into `Fox_Line_v30.html`)
 - **Architecture & Phase-by-Phase Progress:** [[01_Architecture_And_Phase_Progress]]
 - **Mistakes & How We Overcame Them (Full Post-Mortem):** [[02_Mistakes_And_How_We_Overcame_Them]]
 - **Master Specification:** [[../FOX_MOBILE_PLAN|FOX_MOBILE_PLAN.md]]

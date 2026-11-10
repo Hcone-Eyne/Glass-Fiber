@@ -1,14 +1,24 @@
 {
   "nodes": [
     {
+      "id": "progress_main",
+      "type": "file",
+      "file": "PROGRESS.md",
+      "x": -180,
+      "y": -640,
+      "width": 520,
+      "height": 280,
+      "color": "5"
+    },
+    {
       "id": "proto",
-      "type": "text",
-      "x": -620,
-      "y": -260,
-      "width": 360,
-      "height": 180,
-      "color": "6",
-      "text": "# Source of Truth\n`docs/prototypes/Fox_Line_v30.html`\n- 10 exact color tokens\n- Bricolage + Figtree + JetBrains Mono\n- 191-pt ridge cut (`ridge.json`)\n- Zero glow, zero orb, zero HUD"
+      "type": "file",
+      "file": "docs/obsidian/files/Prototype_Source_Of_Truth.md",
+      "x": -660,
+      "y": -320,
+      "width": 400,
+      "height": 260,
+      "color": "6"
     },
     {
       "id": "hub",
@@ -16,66 +26,76 @@
       "file": "docs/obsidian/00_Fox_Mobile_Progress_Hub.md",
       "x": -180,
       "y": -320,
-      "width": 420,
+      "width": 440,
       "height": 260,
       "color": "4"
     },
     {
+      "id": "file_index",
+      "type": "file",
+      "file": "docs/obsidian/files/File_Map_Index.md",
+      "x": 820,
+      "y": -320,
+      "width": 420,
+      "height": 260,
+      "color": "5"
+    },
+    {
       "id": "p0_p1_p2",
-      "type": "text",
-      "x": -620,
+      "type": "file",
+      "file": "docs/obsidian/files/Fox_Mobile_App_And_Core.md",
+      "x": -660,
       "y": 0,
-      "width": 360,
-      "height": 230,
-      "color": "4",
-      "text": "## Phases 0, 1 & 2 (Done)\n- **Phase 0:** OpenJDK 17, SDK 35, Gradle 8.11.1, POCO C71 ADB\n- **Phase 1 (`c76a464`):** Deleted C/JNI/NDK; pure Kotlin `FoxSpring.kt`\n- **Phase 2 (`be8a09a`):** Bundled fonts + `FoxTheme.kt` (`FoxColors`, `FoxInkBox`)"
+      "width": 400,
+      "height": 250,
+      "color": "4"
     },
     {
       "id": "p3_p4",
-      "type": "text",
+      "type": "file",
+      "file": "docs/obsidian/files/Fox_Mobile_Depth_And_Home.md",
       "x": -180,
       "y": 0,
-      "width": 420,
-      "height": 230,
-      "color": "4",
-      "text": "## Phases 3 & 4 (Done)\n- **Phase 3 (`1b60c30`):** `DepthWallpaperAndClock.kt` (191-pt ridge cut, 118sp clock tucked behind ridge, 3-layer tilt parallax)\n- **Phase 4 (`d4890d8`):** `WorkHomeScreen.kt` + `WordsRepository.kt` (`.work` block at 54% H, `Continue` pill, `Set 7:00` alarm chip, `#words` fitted under ridge)"
+      "width": 440,
+      "height": 250,
+      "color": "4"
     },
     {
       "id": "p45",
       "type": "text",
       "x": 320,
-      "y": -260,
+      "y": -320,
       "width": 420,
-      "height": 220,
+      "height": 260,
       "color": "4",
       "text": "## Phase 4.5: Speed Gate (Done)\n**Commit `f2cf075`**\n- `requestHighRefreshRate()` (Mode 2 `120Hz` vote)\n- R8-minified `benchmark` build + `profileinstaller`\n- Pre-baked screen-sized sky & ridge bitmaps (-78% VRAM)\n- Offscreen GPU layers + 0 fps idle tilt sleep\n- **POCO C71 `gfxinfo`: `p50=11ms, p90=15ms, p99=16ms, gpu=6ms, janky=0.00%`**"
     },
     {
       "id": "p5",
-      "type": "text",
+      "type": "file",
+      "file": "docs/obsidian/files/Fox_Mobile_Line_And_Island.md",
       "x": 320,
       "y": 0,
       "width": 420,
       "height": 250,
-      "color": "4",
-      "text": "## Phase 5: The Fox Line (Done — PAUSED HERE)\n**Commit `2af3bcb`**\n- `FoxLineState.kt` urgency queue (`xfer -> timer! -> msg -> cont -> order -> timer -> music`)\n- `FoxLineCanvas.kt` (8 bar shapes, secondary bead, hold-to-wake Fox chips, water ripple rings)\n- `IslandCard.kt` (`LiveActivityIslandCard`, GPU `graphicsLayer`)\n- `FoxLineDebugMenu.kt` (long-press clock hook)\n- System bottom nav bar hidden (`gpu_p50=6ms, gpu_p90=8ms`)"
+      "color": "4"
     },
     {
       "id": "p6_next",
-      "type": "text",
+      "type": "file",
+      "file": "docs/obsidian/files/Fox_Mobile_Pending_Phase6_To_13.md",
       "x": 820,
       "y": 0,
-      "width": 380,
+      "width": 420,
       "height": 250,
-      "color": "2",
-      "text": "## Next Up (After Pause)\n- **Phase 6:** The Search Drawer (Spotlight 56% H, 1:1 drag + springs, real `PackageManager` apps)\n- **Phase 7:** Send & Receive (1 liquid morphing composable, 6 spring channels)\n- **Phase 8:** The Dashboard (pull-down parting painting at ridge)\n- **Phases 9–13:** Polish, Perf, AGSL Ripple, Screenrecord, Real Mac `FoxLinkClient`"
+      "color": "2"
     },
     {
       "id": "mistakes",
       "type": "file",
       "file": "docs/obsidian/02_Mistakes_And_How_We_Overcame_Them.md",
       "x": -180,
-      "y": 300,
+      "y": 310,
       "width": 920,
       "height": 340,
       "color": "1"
@@ -83,12 +103,28 @@
   ],
   "edges": [
     {
+      "id": "e0",
+      "fromNode": "progress_main",
+      "fromSide": "bottom",
+      "toNode": "hub",
+      "toSide": "top",
+      "label": "AI Cold-Start Brain"
+    },
+    {
+      "id": "e0b",
+      "fromNode": "progress_main",
+      "fromSide": "right",
+      "toNode": "file_index",
+      "toSide": "top",
+      "label": "All 42 Files Mapped"
+    },
+    {
       "id": "e1",
       "fromNode": "proto",
       "fromSide": "right",
       "toNode": "hub",
       "toSide": "left",
-      "label": "Specs"
+      "label": "Line-Number Index"
     },
     {
       "id": "e2",
@@ -96,7 +132,7 @@
       "fromSide": "right",
       "toNode": "p3_p4",
       "toSide": "left",
-      "label": "Foundation"
+      "label": "Phases 1-2 -> 3-4"
     },
     {
       "id": "e3",
@@ -112,7 +148,7 @@
       "fromSide": "bottom",
       "toNode": "p5",
       "toSide": "top",
-      "label": "Speed Gate"
+      "label": "Phase 5 Speed Gate"
     },
     {
       "id": "e5",
