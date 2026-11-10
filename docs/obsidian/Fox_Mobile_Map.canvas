@@ -13,7 +13,7 @@
     {
       "id": "proto",
       "type": "file",
-      "file": "docs/obsidian/files/Prototype_Source_Of_Truth.md",
+      "file": "files/Prototype_Fox_Line_v30.md",
       "x": -660,
       "y": -320,
       "width": 400,
@@ -23,7 +23,7 @@
     {
       "id": "hub",
       "type": "file",
-      "file": "docs/obsidian/00_Fox_Mobile_Progress_Hub.md",
+      "file": "00_Fox_Mobile_Progress_Hub.md",
       "x": -180,
       "y": -320,
       "width": 440,
@@ -33,7 +33,7 @@
     {
       "id": "file_index",
       "type": "file",
-      "file": "docs/obsidian/files/File_Map_Index.md",
+      "file": "files/File_Map_Index.md",
       "x": 820,
       "y": -320,
       "width": 420,
@@ -41,9 +41,9 @@
       "color": "5"
     },
     {
-      "id": "p0_p1_p2",
+      "id": "app_shell",
       "type": "file",
-      "file": "docs/obsidian/files/Fox_Mobile_App_And_Core.md",
+      "file": "files/MainActivity.md",
       "x": -660,
       "y": 0,
       "width": 400,
@@ -53,7 +53,7 @@
     {
       "id": "p3_p4",
       "type": "file",
-      "file": "docs/obsidian/files/Fox_Mobile_Depth_And_Home.md",
+      "file": "files/DepthWallpaperAndClock.md",
       "x": -180,
       "y": 0,
       "width": 440,
@@ -62,18 +62,18 @@
     },
     {
       "id": "p45",
-      "type": "text",
+      "type": "file",
+      "file": "files/POCO_C71_Hardware_Rules.md",
       "x": 320,
       "y": -320,
       "width": 420,
       "height": 260,
-      "color": "4",
-      "text": "## Phase 4.5: Speed Gate (Done)\n**Commit `f2cf075`**\n- `requestHighRefreshRate()` (Mode 2 `120Hz` vote)\n- R8-minified `benchmark` build + `profileinstaller`\n- Pre-baked screen-sized sky & ridge bitmaps (-78% VRAM)\n- Offscreen GPU layers + 0 fps idle tilt sleep\n- **POCO C71 `gfxinfo`: `p50=11ms, p90=15ms, p99=16ms, gpu=6ms, janky=0.00%`**"
+      "color": "4"
     },
     {
       "id": "p5",
       "type": "file",
-      "file": "docs/obsidian/files/Fox_Mobile_Line_And_Island.md",
+      "file": "files/FoxLineCanvas.md",
       "x": 320,
       "y": 0,
       "width": 420,
@@ -83,7 +83,7 @@
     {
       "id": "p6_next",
       "type": "file",
-      "file": "docs/obsidian/files/Fox_Mobile_Pending_Phase6_To_13.md",
+      "file": "files/SpotlightSheet.md",
       "x": 820,
       "y": 0,
       "width": 420,
@@ -93,7 +93,7 @@
     {
       "id": "mistakes",
       "type": "file",
-      "file": "docs/obsidian/02_Mistakes_And_How_We_Overcame_Them.md",
+      "file": "02_Mistakes_And_How_We_Overcame_Them.md",
       "x": -180,
       "y": 310,
       "width": 920,
@@ -116,7 +116,7 @@
       "fromSide": "right",
       "toNode": "file_index",
       "toSide": "top",
-      "label": "All 42 Files Mapped"
+      "label": "All Files Mapped"
     },
     {
       "id": "e1",
@@ -128,11 +128,11 @@
     },
     {
       "id": "e2",
-      "fromNode": "p0_p1_p2",
+      "fromNode": "app_shell",
       "fromSide": "right",
       "toNode": "p3_p4",
       "toSide": "left",
-      "label": "Phases 1-2 -> 3-4"
+      "label": "Wallpaper & Clock"
     },
     {
       "id": "e3",

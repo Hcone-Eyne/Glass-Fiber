@@ -1,0 +1,178 @@
+{
+  "nodes": [
+    {
+      "id": "progress_main",
+      "type": "file",
+      "file": "PROGRESS.md",
+      "x": -180,
+      "y": -640,
+      "width": 520,
+      "height": 280,
+      "color": "5"
+    },
+    {
+      "id": "proto",
+      "type": "file",
+      "file": "docs/obsidian/files/Prototype_Fox_Line_v30.md",
+      "x": -660,
+      "y": -320,
+      "width": 400,
+      "height": 260,
+      "color": "6"
+    },
+    {
+      "id": "hub",
+      "type": "file",
+      "file": "docs/obsidian/00_Fox_Mobile_Progress_Hub.md",
+      "x": -180,
+      "y": -320,
+      "width": 440,
+      "height": 260,
+      "color": "4"
+    },
+    {
+      "id": "file_index",
+      "type": "file",
+      "file": "docs/obsidian/files/File_Map_Index.md",
+      "x": 820,
+      "y": -320,
+      "width": 420,
+      "height": 260,
+      "color": "5"
+    },
+    {
+      "id": "app_shell",
+      "type": "file",
+      "file": "docs/obsidian/files/MainActivity.md",
+      "x": -660,
+      "y": 0,
+      "width": 400,
+      "height": 250,
+      "color": "4"
+    },
+    {
+      "id": "p3_p4",
+      "type": "file",
+      "file": "docs/obsidian/files/DepthWallpaperAndClock.md",
+      "x": -180,
+      "y": 0,
+      "width": 440,
+      "height": 250,
+      "color": "4"
+    },
+    {
+      "id": "p45",
+      "type": "file",
+      "file": "docs/obsidian/files/POCO_C71_Hardware_Rules.md",
+      "x": 320,
+      "y": -320,
+      "width": 420,
+      "height": 260,
+      "color": "4"
+    },
+    {
+      "id": "p5",
+      "type": "file",
+      "file": "docs/obsidian/files/FoxLineCanvas.md",
+      "x": 320,
+      "y": 0,
+      "width": 420,
+      "height": 250,
+      "color": "4"
+    },
+    {
+      "id": "p6_next",
+      "type": "file",
+      "file": "docs/obsidian/files/SpotlightSheet.md",
+      "x": 820,
+      "y": 0,
+      "width": 420,
+      "height": 250,
+      "color": "2"
+    },
+    {
+      "id": "mistakes",
+      "type": "file",
+      "file": "docs/obsidian/02_Mistakes_And_How_We_Overcame_Them.md",
+      "x": -180,
+      "y": 310,
+      "width": 920,
+      "height": 340,
+      "color": "1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "fromNode": "progress_main",
+      "fromSide": "bottom",
+      "toNode": "hub",
+      "toSide": "top",
+      "label": "AI Cold-Start Brain"
+    },
+    {
+      "id": "e0b",
+      "fromNode": "progress_main",
+      "fromSide": "right",
+      "toNode": "file_index",
+      "toSide": "top",
+      "label": "All Files Mapped"
+    },
+    {
+      "id": "e1",
+      "fromNode": "proto",
+      "fromSide": "right",
+      "toNode": "hub",
+      "toSide": "left",
+      "label": "Line-Number Index"
+    },
+    {
+      "id": "e2",
+      "fromNode": "app_shell",
+      "fromSide": "right",
+      "toNode": "p3_p4",
+      "toSide": "left",
+      "label": "Wallpaper & Clock"
+    },
+    {
+      "id": "e3",
+      "fromNode": "p3_p4",
+      "fromSide": "top",
+      "toNode": "p45",
+      "toSide": "left",
+      "label": "0.00% Jank Optimization"
+    },
+    {
+      "id": "e4",
+      "fromNode": "p45",
+      "fromSide": "bottom",
+      "toNode": "p5",
+      "toSide": "top",
+      "label": "Phase 5 Speed Gate"
+    },
+    {
+      "id": "e5",
+      "fromNode": "p5",
+      "fromSide": "right",
+      "toNode": "p6_next",
+      "toSide": "left",
+      "label": "Paused Before Phase 6"
+    },
+    {
+      "id": "e6",
+      "fromNode": "mistakes",
+      "fromSide": "top",
+      "toNode": "p3_p4",
+      "toSide": "bottom",
+      "label": "11 Mistakes & Fixes"
+    },
+    {
+      "id": "e7",
+      "fromNode": "mistakes",
+      "fromSide": "top",
+      "toNode": "p5",
+      "toSide": "bottom",
+      "label": "Hardware & GPU Lessons"
+    }
+  ]
+}

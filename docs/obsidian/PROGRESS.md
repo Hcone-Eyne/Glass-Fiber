@@ -28,16 +28,29 @@ tags:
   Open **Obsidian.app** → *Open folder as vault* → select `/Users/enoch/Desktop/Glass_Main(me)/Android Launcher!/docs/obsidian` (or the root `/Users/enoch/Desktop/Glass_Main(me)/Android Launcher!`).
 
 ### Core Obsidian Vault Nodes
-- **Main Hub:** [[docs/obsidian/00_Fox_Mobile_Progress_Hub|00_Fox_Mobile_Progress_Hub]]
-- **Visual Canvas Board:** [[docs/obsidian/Fox_Mobile_Map.canvas|Fox_Mobile_Map.canvas]]
-- **Complete File-by-File Map (All 42 Repo Files):** [[docs/obsidian/files/File_Map_Index|File_Map_Index]]
-  - [[docs/obsidian/files/Fox_Mobile_App_And_Core|Fox_Mobile_App_And_Core]] (`MainActivity.kt`, `FoxSpring.kt`, `FoxTheme.kt`, Gradle)
-  - [[docs/obsidian/files/Fox_Mobile_Depth_And_Home|Fox_Mobile_Depth_And_Home]] (`DepthWallpaperAndClock.kt`, `WordsRepository.kt`, `WorkHomeScreen.kt`)
-  - [[docs/obsidian/files/Fox_Mobile_Line_And_Island|Fox_Mobile_Line_And_Island]] (`FoxLineState.kt`, `FoxLineCanvas.kt`, `IslandCard.kt`, `FoxLineDebugMenu.kt`)
-  - [[docs/obsidian/files/Fox_Mobile_Pending_Phase6_To_13|Fox_Mobile_Pending_Phase6_To_13]] (`SpotlightSheet.kt` **[LEGACY]**, `FoxProtocol.kt`, `FoxLinkClient.kt`, `fox-desk`)
-  - [[docs/obsidian/files/Prototype_Source_Of_Truth|Prototype_Source_Of_Truth]] (Exact line-number index into `Fox_Line_v30.html`)
-- **Mistakes & How We Overcame Them (11 Post-Mortems):** [[docs/obsidian/02_Mistakes_And_How_We_Overcame_Them|02_Mistakes_And_How_We_Overcame_Them]]
-- **Architecture & Phase Progress:** [[docs/obsidian/01_Architecture_And_Phase_Progress|01_Architecture_And_Phase_Progress]]
+- **Main Hub:** [[00_Fox_Mobile_Progress_Hub]]
+- **Interactive Visual Canvas Board:** [[Fox_Mobile_Map.canvas]]
+- **Complete File-by-File Index:** [[File_Map_Index]]
+- **Active v30 Components:**
+  - [[MainActivity]] (`MainActivity.kt` — App host & refresh rate)
+  - [[FoxSpring]] (`FoxSpring.kt` — Spring physics engine)
+  - [[FoxTheme]] (`FoxTheme.kt` — 10 exact color tokens & Ink material)
+  - [[DepthWallpaperAndClock]] (`DepthWallpaperAndClock.kt` — 3-layer depth & calm tilt)
+  - [[WordsRepository]] (`WordsRepository.kt` — Quotes & mountain ridge fit)
+  - [[WorkHomeScreen]] (`WorkHomeScreen.kt` — Home work block & Continue pill)
+  - [[FoxLineState]] (`FoxLineState.kt` — Urgency queue & activity engine)
+  - [[FoxLineCanvas]] (`FoxLineCanvas.kt` — Line touch strip & water ripple)
+  - [[IslandCard]] (`IslandCard.kt` — Live Activity card)
+  - [[FoxLineDebugMenu]] (`FoxLineDebugMenu.kt` — Clock long-press debug menu)
+- **Pending Phases & Protocol:**
+  - [[SpotlightSheet]] (`SpotlightSheet.kt` — **LEGACY**: replace in Phase 6)
+  - [[FoxProtocol]] & [[FoxLinkClient]] (WebSocket protocol for Phase 13)
+  - [[ContractTest]] (`ContractTest.kt` — Verification test suite)
+- **Knowledge & Reference:**
+  - [[Prototype_Fox_Line_v30]] (Exact prototype line lookup)
+  - [[POCO_C71_Hardware_Rules]] (5 golden hardware rules for Unisoc T603)
+  - [[02_Mistakes_And_How_We_Overcame_Them]] (All 11 mistakes post-mortem)
+  - [[01_Architecture_And_Phase_Progress]] (Architecture breakdown)
 
 ---
 
