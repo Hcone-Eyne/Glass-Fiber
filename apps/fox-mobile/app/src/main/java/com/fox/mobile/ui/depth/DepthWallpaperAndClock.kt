@@ -1,13 +1,13 @@
 package com.fox.mobile.ui.depth
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.provider.Settings
-import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -29,34 +29,38 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.fox.mobile.ui.theme.FoxColors
 import com.fox.mobile.ui.theme.FoxFonts
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -374,6 +378,10 @@ fun ridgeYAtScreenX(screenX: Float, box: WallpaperBox): Float {
  * Reads accelerometer / gravity sensor and smooths with factor 0.08 per frame.
  * Falls back to subtle ambient breathing when sensors are unavailable.
  * Respects system animations: when ANIMATOR_DURATION_SCALE is 0, tilt offsets remain 0.
+ *
+ * Calm tilt:
+ * - Only updates tiltX and tiltY when the change after the 0.08f filter > 0.002f.
+ * - updateLowPass returns true if tiltX or tiltY changed by > 0.002f, and false otherwise.
  */
 class TiltParallaxState(
     animationsEnabled: Boolean = true
@@ -388,19 +396,31 @@ class TiltParallaxState(
         animationsEnabled = isAnimationScaleNonZero(context)
     )
 
-    fun updateLowPass(hasSensor: Boolean, timeSec: Float) {
+    fun updateLowPass(hasSensor: Boolean, timeSec: Float): Boolean {
         if (!animationsEnabled) {
+            if (abs(tiltX) > 0.002f || abs(tiltY) > 0.002f) {
+                tiltX = 0f
+                tiltY = 0f
+                return true
+            }
             tiltX = 0f
             tiltY = 0f
-            return
+            return false
         }
         // Fallback subtle breathing if no sensor active (from prototype frame(): sin(t/3.1)*0.22, cos(t/4.3)*0.13)
         val tgtX = if (hasSensor) targetX else (sin(timeSec / 3.1f) * 0.22f)
         val tgtY = if (hasSensor) targetY else (cos(timeSec / 4.3f) * 0.13f)
 
         // Low-pass 0.08 filter: tilt += (tgt - tilt) * 0.08
-        tiltX += (tgtX - tiltX) * 0.08f
-        tiltY += (tgtY - tiltY) * 0.08f
+        val nextX = tiltX + (tgtX - tiltX) * 0.08f
+        val nextY = tiltY + (tgtY - tiltY) * 0.08f
+
+        if (abs(nextX - tiltX) > 0.002f || abs(nextY - tiltY) > 0.002f) {
+            tiltX = nextX
+            tiltY = nextY
+            return true
+        }
+        return false
     }
 
     companion object {
@@ -419,17 +439,21 @@ class TiltParallaxState(
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 fun rememberTiltParallaxState(): TiltParallaxState {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val animationsEnabled = remember(context) {
         TiltParallaxState.isAnimationScaleNonZero(context)
     }
     val state = remember { TiltParallaxState(animationsEnabled = animationsEnabled) }
     state.animationsEnabled = animationsEnabled
+
+    val wakeChannel = remember { Channel<Unit>(Channel.CONFLATED) }
     var hasSensor by remember { mutableStateOf(false) }
 
-    DisposableEffect(context, animationsEnabled) {
+    DisposableEffect(lifecycleOwner, context, animationsEnabled) {
         if (!animationsEnabled) {
             state.tiltX = 0f
             state.tiltY = 0f
@@ -448,19 +472,51 @@ fun rememberTiltParallaxState(): TiltParallaxState {
                 // Portrait mode: event.values[0] is X (tilt right -> -9.8), event.values[1] is Y (tilt up -> +9.8)
                 val rawX = -event.values[0] / 9.81f
                 val rawY = (event.values[1] - 5.5f) / 5.5f // Neutral viewing angle ~55 degrees
-                state.targetX = rawX.coerceIn(-1.5f, 1.5f)
-                state.targetY = rawY.coerceIn(-1.5f, 1.5f)
+                val newTargetX = rawX.coerceIn(-1.5f, 1.5f)
+                val newTargetY = rawY.coerceIn(-1.5f, 1.5f)
+
+                if (abs(newTargetX - state.targetX) > 0.002f || abs(newTargetY - state.targetY) > 0.002f) {
+                    state.targetX = newTargetX
+                    state.targetY = newTargetY
+                    wakeChannel.trySend(Unit)
+                }
             }
 
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
 
-        if (sensorManager != null && sensor != null) {
-            sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
+        var isRegistered = false
+        fun register() {
+            if (!isRegistered && sensorManager != null && sensor != null) {
+                sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
+                isRegistered = true
+                wakeChannel.trySend(Unit)
+            }
+        }
+
+        fun unregister() {
+            if (isRegistered) {
+                sensorManager?.unregisterListener(listener)
+                isRegistered = false
+            }
+        }
+
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> register()
+                Lifecycle.Event.ON_PAUSE -> unregister()
+                else -> {}
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            register()
         }
 
         onDispose {
-            sensorManager?.unregisterListener(listener)
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            unregister()
         }
     }
 
@@ -471,12 +527,33 @@ fun rememberTiltParallaxState(): TiltParallaxState {
             return@LaunchedEffect
         }
         var startTime = -1L
+        var stillSinceNanos = -1L
+
         while (isActive) {
-            withInfiniteAnimationFrameMillis { frameTimeMillis ->
-                if (startTime < 0) startTime = frameTimeMillis
-                val timeSec = (frameTimeMillis - startTime) / 1000f
-                state.updateLowPass(hasSensor, timeSec)
+            var isAwake = true
+            while (isAwake && isActive) {
+                withFrameNanos { frameTimeNanos ->
+                    if (startTime < 0L) startTime = frameTimeNanos
+                    val timeSec = (frameTimeNanos - startTime) / 1_000_000_000f
+
+                    val moved = state.updateLowPass(hasSensor, timeSec)
+                    if (moved || !hasSensor) {
+                        stillSinceNanos = -1L
+                    } else {
+                        if (stillSinceNanos < 0L) {
+                            stillSinceNanos = frameTimeNanos
+                        } else if (frameTimeNanos - stillSinceNanos >= 1_000_000_000L) {
+                            // Phone has been still for 1 second. Exit frame loop!
+                            isAwake = false
+                        }
+                    }
+                }
             }
+
+            // Suspended while resting: ZERO frames scheduled until phone moves again
+            while (wakeChannel.tryReceive().isSuccess) {}
+            wakeChannel.receive()
+            stillSinceNanos = -1L
         }
     }
 
@@ -484,24 +561,33 @@ fun rememberTiltParallaxState(): TiltParallaxState {
 }
 
 /**
- * Loads wallpaper ImageBitmap from Android assets "wallpaper.webp".
+ * Loads raw wallpaper Bitmap from Android assets "wallpaper.webp".
  */
 @Composable
-fun rememberWallpaperBitmap(): ImageBitmap? {
+fun rememberRawWallpaperBitmap(): Bitmap? {
     val context = LocalContext.current
-    return produceState<ImageBitmap?>(initialValue = null, context) {
+    return produceState<Bitmap?>(initialValue = null, context) {
         value = try {
             context.assets.open("wallpaper.webp").use { inputStream ->
-                BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
+                BitmapFactory.decodeStream(inputStream)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }.value
 }
 
 /**
- * Main Depth Wallpaper & Clock Composable (Phase 3).
+ * Loads wallpaper ImageBitmap from Android assets "wallpaper.webp".
+ */
+@Composable
+fun rememberWallpaperBitmap(): ImageBitmap? {
+    val raw = rememberRawWallpaperBitmap()
+    return remember(raw) { raw?.asImageBitmap() }
+}
+
+/**
+ * Main Depth Wallpaper & Clock Composable (Phase 3 & Phase 4.5 Speed).
  */
 @Composable
 fun DepthWallpaperAndClock(
@@ -509,10 +595,11 @@ fun DepthWallpaperAndClock(
     fontDisplay: FontFamily = FoxFonts.Bricolage,
     fontBody: FontFamily = FoxFonts.Figtree,
     tiltState: TiltParallaxState = rememberTiltParallaxState(),
+    dashProgressProvider: () -> Float = { 0f },
     overlayContent: @Composable BoxScope.(WallpaperBox) -> Unit = {}
 ) {
     val density = LocalDensity.current
-    val wallpaperBitmap = rememberWallpaperBitmap()
+    val rawBitmap = rememberRawWallpaperBitmap()
 
     // Clock and date time states (ticks every 15 seconds)
     var timeString by remember { mutableStateOf("") }
@@ -537,35 +624,67 @@ fun DepthWallpaperAndClock(
         val screenW = with(density) { maxWidth.toPx() }
         val screenH = with(density) { maxHeight.toPx() }
         val box = remember(screenW, screenH) { WallpaperBox.calculate(screenW, screenH) }
-        val ridgePath = remember(box) { buildRidgePath(box) }
 
-        // Parallax offsets in pixels:
-        // back:  tiltX * 5,  tiltY * 4
-        // clock: tiltX * 10, tiltY * 8
-        // front: tiltX * 18, tiltY * 13
-        val backOffsetX = tiltState.tiltX * 5f
-        val backOffsetY = tiltState.tiltY * 4f
+        val bleed = 32
+        val layerW = screenW.roundToInt() + bleed * 2
+        val layerH = screenH.roundToInt() + bleed * 2
 
-        val clockOffsetX = tiltState.tiltX * 10f
-        val clockOffsetY = tiltState.tiltY * 8f
+        val prebakedLayers = remember(rawBitmap, layerW, layerH, box) {
+            if (rawBitmap != null && layerW > 0 && layerH > 0) {
+                val paint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG or android.graphics.Paint.ANTI_ALIAS_FLAG)
+                val dstRect = android.graphics.RectF(
+                    box.left + bleed,
+                    box.top + bleed,
+                    box.left + box.iw + bleed,
+                    box.top + box.ih + bleed
+                )
 
-        val frontOffsetX = tiltState.tiltX * 18f
-        val frontOffsetY = tiltState.tiltY * 13f
+                val backBmp = Bitmap.createBitmap(layerW, layerH, Bitmap.Config.ARGB_8888)
+                android.graphics.Canvas(backBmp).drawBitmap(rawBitmap, null, dstRect, paint)
+
+                val frontBmp = Bitmap.createBitmap(layerW, layerH, Bitmap.Config.ARGB_8888)
+                val frontCanvas = android.graphics.Canvas(frontBmp)
+                val ridgeAndroidPath = android.graphics.Path().apply {
+                    if (RIDGE_NORMALIZED_POINTS.isNotEmpty()) {
+                        val first = RIDGE_NORMALIZED_POINTS[0]
+                        moveTo(box.left + bleed + first.x * box.iw, box.top + bleed + first.y * box.ih)
+                        for (i in 1 until RIDGE_NORMALIZED_POINTS.size) {
+                            val pt = RIDGE_NORMALIZED_POINTS[i]
+                            lineTo(box.left + bleed + pt.x * box.iw, box.top + bleed + pt.y * box.ih)
+                        }
+                        lineTo(box.left + bleed + box.iw, box.top + bleed + box.ih)
+                        lineTo(box.left + bleed, box.top + bleed + box.ih)
+                        close()
+                    }
+                }
+                frontCanvas.save()
+                frontCanvas.clipPath(ridgeAndroidPath)
+                frontCanvas.drawBitmap(backBmp, 0f, 0f, null)
+                frontCanvas.restore()
+
+                Pair(backBmp.asImageBitmap(), frontBmp.asImageBitmap())
+            } else {
+                null
+            }
+        }
 
         // -------------------------------------------------------------
         // LAYER 1: BACK WALLPAPER (Sky + background painting)
+        // Pre-baked at screen size, moved on the GPU via graphicsLayer.
         // -------------------------------------------------------------
         Canvas(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val p = dashProgressProvider()
+                    translationX = tiltState.tiltX * 5f
+                    translationY = tiltState.tiltY * 4f - 0.20f * screenH * p
+                }
         ) {
-            if (wallpaperBitmap != null) {
+            if (prebakedLayers != null) {
                 drawImage(
-                    image = wallpaperBitmap,
-                    dstOffset = IntOffset(
-                        (box.left + backOffsetX).roundToInt(),
-                        (box.top + backOffsetY).roundToInt()
-                    ),
-                    dstSize = IntSize(box.iw.roundToInt(), box.ih.roundToInt())
+                    image = prebakedLayers.first,
+                    topLeft = Offset(-bleed.toFloat(), -bleed.toFloat())
                 )
             } else {
                 // Pre-render gradient fallback for preview/testing
@@ -579,18 +698,18 @@ fun DepthWallpaperAndClock(
 
         // -------------------------------------------------------------
         // LAYER 2: CLOCK & DATE (Tucked behind the ridge)
-        // Position: left 22dp, top 24.5% of H
+        // Position: left 22dp, top 24.5% of H. Cached offscreen & moved on the GPU.
         // -------------------------------------------------------------
         val clockTopDp = maxHeight * 0.245f
         Column(
             modifier = Modifier
-                .padding(start = 22.dp)
-                .offset {
-                IntOffset(
-                    x = clockOffsetX.roundToInt(),
-                    y = (clockOffsetY + with(density) { clockTopDp.toPx() }).roundToInt()
-                )
-            }
+                .padding(start = 22.dp, top = clockTopDp)
+                .graphicsLayer {
+                    val p = dashProgressProvider()
+                    compositingStrategy = CompositingStrategy.Offscreen
+                    translationX = tiltState.tiltX * 10f
+                    translationY = tiltState.tiltY * 8f - 0.20f * screenH * p
+                }
         ) {
             // Date: Figtree 14sp, 600, t2 color (F6F0E6 68%), shadow 0 1px 8px rgba(0,0,0,.6), margin-left 6dp
             Text(
@@ -631,28 +750,28 @@ fun DepthWallpaperAndClock(
 
         // -------------------------------------------------------------
         // LAYER 3: FRONT WALLPAPER (Ground / Ridge layer)
-        // Clipped to ridge path inside withTransform, moves by (tiltX * 18, tiltY * 13)
-        // Both the ridge clip boundary and front painting move together
+        // Pre-clipped to ridge path at screen size, moved on GPU via graphicsLayer.
         // -------------------------------------------------------------
         Canvas(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            withTransform({ translate(left = frontOffsetX, top = frontOffsetY) }) {
-                clipPath(ridgePath) {
-                    if (wallpaperBitmap != null) {
-                        drawImage(
-                            image = wallpaperBitmap,
-                            dstOffset = IntOffset(box.left.roundToInt(), box.top.roundToInt()),
-                            dstSize = IntSize(box.iw.roundToInt(), box.ih.roundToInt())
-                        )
-                    } else {
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color(0xEEFFFFFF), Color(0xFF2B3A4A), Color(0xFF0C0D14))
-                            )
-                        )
-                    }
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val p = dashProgressProvider()
+                    translationX = tiltState.tiltX * 18f
+                    translationY = tiltState.tiltY * 13f + 0.52f * screenH * p
                 }
+        ) {
+            if (prebakedLayers != null) {
+                drawImage(
+                    image = prebakedLayers.second,
+                    topLeft = Offset(-bleed.toFloat(), -bleed.toFloat())
+                )
+            } else {
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color(0xEEFFFFFF), Color(0xFF2B3A4A), Color(0xFF0C0D14))
+                    )
+                )
             }
         }
 

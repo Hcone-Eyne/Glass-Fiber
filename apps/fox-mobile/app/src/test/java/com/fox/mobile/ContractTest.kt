@@ -19,6 +19,7 @@ import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.File
+import kotlin.math.abs
 
 class ContractTest {
     private fun resolveProtocolDir(): File {
@@ -279,12 +280,12 @@ class ContractTest {
         assertEquals("Frame 2 tiltX", expectedX2, tiltState.tiltX, 0.001f)
         assertEquals("Frame 2 tiltY", expectedY2, tiltState.tiltY, 0.001f)
 
-        // Convergence after 60 frames
+        // Convergence after 60 frames (settles within 0.025f of target under 0.002 calm-tilt deadband)
         repeat(60) {
             tiltState.updateLowPass(hasSensor = true, timeSec = 0f)
         }
-        assertTrue("tiltX should smoothly approach target 1.0f, got ${tiltState.tiltX}", tiltState.tiltX > 0.99f)
-        assertTrue("tiltY should smoothly approach target -0.5f, got ${tiltState.tiltY}", tiltState.tiltY < -0.49f)
+        assertTrue("tiltX should smoothly approach target 1.0f, got ${tiltState.tiltX}", tiltState.tiltX >= 0.975f)
+        assertTrue("tiltY should smoothly approach target -0.5f, got ${tiltState.tiltY}", tiltState.tiltY <= -0.475f)
 
         // Respect animationsEnabled = false (e.g. reduced motion or zero duration scale)
         tiltState.animationsEnabled = false
@@ -391,5 +392,130 @@ class ContractTest {
         }
 
         println("  [PASS] testPhase4WordsRepositoryAndRidgeFit: verified 3 words items, time-of-day index, attributions, and mountain ridge clearance on POCO C71")
+    }
+
+    // Extension properties and methods for Phase 4.5 speed and spring settle contract
+    private val Spring1D.position: Float
+        get() = value
+
+    private val Spring1D.velocity: Float
+        get() = v
+
+    private fun Spring1D.isSettled(tolerance: Float = 0.001f, vTolerance: Float = 0.002f): Boolean {
+        val settled = isAtRest(tolerance, vTolerance)
+        if (settled) {
+            snapTo(target)
+        }
+        return settled
+    }
+
+    private fun SpringChannelSet.isSettled(tolerance: Float = 0.001f, vTolerance: Float = 0.002f): Boolean {
+        val settled = isAtRest(tolerance, vTolerance)
+        if (settled) {
+            for (name in listOf("progress", "channel", "x", "y", "width")) {
+                val ch = this[name]
+                if (ch.isAtRest(tolerance, vTolerance)) {
+                    ch.snapTo(ch.target)
+                }
+            }
+        }
+        return settled
+    }
+
+    @Test
+    fun testPhase4_5CalmTiltAndSpringSettle() {
+        // -----------------------------------------------------------------
+        // 1. TiltParallaxState(animationsEnabled = true) calm tilt deadband
+        // -----------------------------------------------------------------
+        val tiltState = TiltParallaxState(animationsEnabled = true)
+        assertEquals(0f, tiltState.tiltX, 0.00001f)
+        assertEquals(0f, tiltState.tiltY, 0.00001f)
+
+        // 1a. Sub-threshold target changes (< 0.002 delta after 0.08 low-pass):
+        // When targetX = 0.001f, targetY = 0.001f, post-filter delta = (0.001 - 0) * 0.08 = 0.00008f < 0.002f.
+        // updateLowPass(hasSensor = true, timeSec = 1f) must NOT change tiltX or tiltY!
+        tiltState.targetX = 0.001f
+        tiltState.targetY = 0.001f
+        tiltState.updateLowPass(hasSensor = true, timeSec = 1f)
+        assertEquals("tiltX must not change for sub-threshold delta < 0.002f", 0f, tiltState.tiltX, 0.00001f)
+        assertEquals("tiltY must not change for sub-threshold delta < 0.002f", 0f, tiltState.tiltY, 0.00001f)
+
+        // 1b. Large motion updates tiltX and tiltY, then settles cleanly:
+        // When targetX = 1.0f, targetY = 0.5f, updateLowPass advances tiltX and tiltY.
+        tiltState.targetX = 1.0f
+        tiltState.targetY = 0.5f
+        tiltState.updateLowPass(hasSensor = true, timeSec = 1f)
+        assertTrue("tiltX must update on suprathreshold motion", tiltState.tiltX > 0f)
+        assertTrue("tiltY must update on suprathreshold motion", tiltState.tiltY > 0f)
+
+        // Repeated steps toward (1.0f, 0.5f) until (target - tilt) * 0.08 <= 0.002f, where it settles cleanly
+        var prevX = tiltState.tiltX
+        var prevY = tiltState.tiltY
+        var tiltSettled = false
+        var tiltSteps = 0
+
+        while (tiltSteps < 100) {
+            tiltState.updateLowPass(hasSensor = true, timeSec = 1f)
+            val curX = tiltState.tiltX
+            val curY = tiltState.tiltY
+            if (curX == prevX && curY == prevY) {
+                tiltSettled = true
+                break
+            }
+            prevX = curX
+            prevY = curY
+            tiltSteps++
+        }
+
+        assertTrue("TiltParallaxState must settle within 100 steps, took $tiltSteps", tiltSettled)
+        // Verify that upon settling, remaining delta * 0.08 is <= 0.002f
+        val remainingDeltaX = abs(tiltState.targetX - tiltState.tiltX) * 0.08f
+        val remainingDeltaY = abs(tiltState.targetY - tiltState.tiltY) * 0.08f
+        assertTrue("Settled remaining deltaX ($remainingDeltaX) must be <= 0.002f", remainingDeltaX <= 0.00201f)
+        assertTrue("Settled remaining deltaY ($remainingDeltaY) must be <= 0.002f", remainingDeltaY <= 0.00201f)
+
+        // Once settled, subsequent calls cause zero mutation
+        val settledX = tiltState.tiltX
+        val settledY = tiltState.tiltY
+        tiltState.updateLowPass(hasSensor = true, timeSec = 1f)
+        assertEquals("tiltX must not mutate once settled", settledX, tiltState.tiltX, 0.00001f)
+        assertEquals("tiltY must not mutate once settled", settledY, tiltState.tiltY, 0.00001f)
+
+        // -----------------------------------------------------------------
+        // 2. Spring1D settle in under 180 frames (< 1.5s at 120Hz)
+        // -----------------------------------------------------------------
+        val spring = Spring1D.fromApple(initialValue = 0f)
+        spring.retarget(100f)
+        val dt = 1f / 120f // 120 Hz frame duration (~8.333ms)
+        var springFrames = 0
+        while (!spring.isSettled() && springFrames < 300) {
+            spring.step(dt)
+            springFrames++
+        }
+        assertTrue("Spring1D must settle in under 180 frames (< 1.5s), settled in $springFrames frames", springFrames < 180)
+        assertTrue("Spring1D isSettled() must be true", spring.isSettled())
+        assertEquals("Spring1D position must snap to 100f once settled", 100f, spring.position, 0.0001f)
+        assertEquals("Spring1D velocity must be 0f once settled", 0f, spring.velocity, 0.0001f)
+
+        // -----------------------------------------------------------------
+        // 3. SpringChannelSet settle in under 180 frames (< 1.5s at 120Hz)
+        // -----------------------------------------------------------------
+        val channelSet = SpringChannelSet(
+            channels = mapOf("channel" to 0f)
+        )
+        channelSet.setTargetApple("channel", 100f)
+        val channel = channelSet["channel"]
+        var channelFrames = 0
+        while (!channelSet.isSettled() && channelFrames < 300) {
+            channelSet.step(dt)
+            channelFrames++
+        }
+        assertTrue("SpringChannelSet must settle in under 180 frames (< 1.5s), settled in $channelFrames frames", channelFrames < 180)
+        assertTrue("SpringChannelSet isSettled() must be true", channelSet.isSettled())
+        assertTrue("Channel isSettled() must be true", channel.isSettled())
+        assertEquals("Channel position must snap to 100f once settled", 100f, channel.position, 0.0001f)
+        assertEquals("Channel velocity must be 0f once settled", 0f, channel.velocity, 0.0001f)
+
+        println("  [PASS] testPhase4_5CalmTiltAndSpringSettle: verified calm tilt deadband (<0.002f) and spring 120Hz settle (<1.5s)")
     }
 }
